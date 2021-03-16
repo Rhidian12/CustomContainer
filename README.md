@@ -14,7 +14,6 @@ After deciding this, I created 3 pointers: `m_pHead` would be the start of my bl
 </br> The constructor speaks for itself, it assigns a block of memory with a size of `5 * sizeof(Type)` and makes sure that the `m_pTail` is also initialized.
 Next up, the `Push_back`. This was not too hard either, all I needed to do was:
 * Check if this is the first time an element gets added to the container
-* Check if an element has already been added:
   * If no elements have been added yet: Just add the element to the container by moving `m_pCurrentElement`
   * If elements have been added already: First check if memory needs to be reallocated, then add it to the container by moving `m_pCurrentElement`
 
