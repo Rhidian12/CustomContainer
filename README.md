@@ -30,3 +30,9 @@ However, once again, this function was merely a byproduct of my earlier mismanag
 
 ### Performance
 I am sad to say that `std::vector` is utterly superior to my CustomContainer.
+
+![STLvsCustom](https://github.com/Rhidian12/CustomContainer/blob/main/STLvsCUSTOM.png)
+
+As this graph clearly shows, STL is a **lot** faster. This test was run in Debug mode, but the times have the same amount of difference between them in Release mode.
+
+I might later update this code, when I understand how to use and apply SIMD operations, which will probably make my container a lot faster
