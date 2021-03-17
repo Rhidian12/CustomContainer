@@ -3,14 +3,15 @@
 #include <chrono> // std::chrono
 #include <vector> // std::vector
 #include <fstream> // std::ofstream
-#include <algorithm> // std::max_element
+#include <algorithm> // std::max_element, std::min_element, std::remove_if
 
 int main(int argc, char* argv[])
 {
 	using Timepoint = std::chrono::high_resolution_clock::time_point;
 
 	std::ofstream file{};
-	file.open("BenchmarksReleaseX64.txt");
+	file.open("BenchmarksDebugX64.txt");
+	//file.open("BenchmarksReleaseX64.txt");
 
 	const int amountOfIterations{ 100 };
 	const int amountOfPushbacks{ 50 };
@@ -37,10 +38,37 @@ int main(int argc, char* argv[])
 				const long long time = std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count();
 				times.push_back(time);
 			}
-			times.erase(std::remove(times.begin(), times.end(), *(std::max_element(times.cbegin(), times.cend()))), times.end());
-			times.erase(std::remove(times.begin(), times.end(), *(std::min_element(times.cbegin(), times.cend()))), times.end());
+			bool hasValueBeenErased{};
+			const long long minElement{ *(std::min_element(times.cbegin(), times.cend())) };
+			times.erase(std::remove_if(times.begin(), times.end(), [&hasValueBeenErased, minElement](const long long a)->bool
+				{
+					if (!hasValueBeenErased)
+					{
+						if (minElement == a)
+						{
+							hasValueBeenErased = true;
+							return true;
+						}
+					}
+					return false;
+				}), times.end());
 
-			file << i << " " << "STL: " << std::fixed << std::accumulate(times.cbegin(), times.cend(), 0.f) << std::endl;
+			hasValueBeenErased = true;
+			const long long maxElement{ *(std::max_element(times.cbegin(), times.cend())) };
+			times.erase(std::remove_if(times.begin(), times.end(), [&hasValueBeenErased, maxElement](const long long a)->bool
+				{
+					if (!hasValueBeenErased)
+					{
+						if (maxElement == a)
+						{
+							hasValueBeenErased = true;
+							return true;
+						}
+					}
+					return false;
+				}), times.end());
+
+			file << i << " " << "STL: " << std::fixed << std::accumulate(times.cbegin(), times.cend(), 0.f) / times.size() << std::endl;
 		}
 		{
 			std::vector<long long> times{};
@@ -58,10 +86,37 @@ int main(int argc, char* argv[])
 				const long long time = std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count();
 				times.push_back(time);
 			}
-			times.erase(std::remove(times.begin(), times.end(), *(std::max_element(times.cbegin(), times.cend()))), times.end());
-			times.erase(std::remove(times.begin(), times.end(), *(std::min_element(times.cbegin(), times.cend()))), times.end());
+			bool hasValueBeenErased{};
+			const long long minElement{ *(std::min_element(times.cbegin(), times.cend())) };
+			times.erase(std::remove_if(times.begin(), times.end(), [&hasValueBeenErased, minElement](const long long a)->bool
+				{
+					if (!hasValueBeenErased)
+					{
+						if (minElement == a)
+						{
+							hasValueBeenErased = true;
+							return true;
+						}
+					}
+					return false;
+				}), times.end());
 
-			file << i << " " << "CUSTOM: " << std::fixed << std::accumulate(times.cbegin(), times.cend(), 0.f) << std::endl;
+			hasValueBeenErased = true;
+			const long long maxElement{ *(std::max_element(times.cbegin(), times.cend())) };
+			times.erase(std::remove_if(times.begin(), times.end(), [&hasValueBeenErased, maxElement](const long long a)->bool
+				{
+					if (!hasValueBeenErased)
+					{
+						if (maxElement == a)
+						{
+							hasValueBeenErased = true;
+							return true;
+						}
+					}
+					return false;
+				}), times.end());
+
+			file << i << " " << "CUSTOM: " << std::fixed << std::accumulate(times.cbegin(), times.cend(), 0.f) / times.size() << std::endl;
 		}
 	}
 
