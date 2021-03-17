@@ -1,5 +1,8 @@
 # CustomContainer
 
+### Changelog
+[17/03]: Someone gave me the wonderful suggestion that `std::vector` reallocates by (approximately) doing `newCapacity = currentCapacity * 2`, the CustomContainer now does the same thing. A more detailed explanation about the benchmarking has been added.
+
 ### The Goal
 I started this small project with the hope of being able to make my own version of `std::vector` and possibly even improve it.
 
@@ -28,10 +31,10 @@ However, once again, this function was merely a byproduct of my earlier mismanag
 </br> And with that, I had myself a fully functional `CustomContainer`
 
 ### Performance
-I am sad to say that `std::vector` is utterly superior to my CustomContainer.
+I am happy to say that my Container is faster than `std::vector` in Debug x64 in Visual Studio. I benchmarked this by creating a local `std::vector` and then doing `50 * i` push_backs, forcing several reallocations to occur. After that, I removed the slowest and fastest times, and wrote it to a file. I did the same thing for my Container.
 
-![STLvsCustom](https://github.com/Rhidian12/CustomContainer/blob/main/STLvsCUSTOM.png)
+![STLvsCustomDebugx64](https://github.com/Rhidian12/CustomContainer/blob/main/STLvsCUSTOMDebugx64.png)
 
-As this graph clearly shows, STL is a **lot** faster. This test was run in Debug mode, but the times have the same amount of difference between them in Release mode.
+![STLvsCustomReleasex64](https://github.com/Rhidian12/CustomContainer/blob/main/STLvsCUSTOMReleasex64.png)
 
-I might later update this code, when I understand how to use and apply SIMD operations, which will probably make my container a lot faster
+These graphs were created in Python using the `Matplotlib` library (https://matplotlib.org/). The graphs show that my Container is faster than `std::vector` in Debug x64, and approximately its equal in Release x64. I do assume that `std::vector` is slower in Debug x64 because it offers stronger and better guarantees than my Container.
