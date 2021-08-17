@@ -27,13 +27,13 @@ public:
 	CustomContainer(const CustomContainer<Type>& other) noexcept
 	{
 		const size_t capacity{ other.GetCapacity() };
-		m_pHead = static_cast<Type*>(calloc(capacity, size)); 
+		m_pHead = static_cast<Type*>(calloc(capacity, size));
 		m_pTail = m_pHead + capacity;
 
-		for (size_t index{ 1 }; index < other.GetSize(); ++index)
+		for (size_t index{  }; index < other.GetSize(); ++index)
 		{
-			m_pCurrentElement = m_pHead + index; 
-			*m_pCurrentElement = other.At(index - 1);
+			m_pCurrentElement = m_pHead + index + 1;
+			*m_pCurrentElement = other.At(index);
 		}
 	}
 	CustomContainer(CustomContainer<Type>&& other) noexcept
@@ -42,14 +42,14 @@ public:
 		m_pHead = static_cast<Type*>(calloc(capacity, size)); // maybe make m_pHead actually useful instead of storing memory?
 		m_pTail = m_pHead + capacity;
 
-		for (size_t index{ 1 }; index < other.GetSize(); ++index)
+		for (size_t index{  }; index < other.GetSize(); ++index)
 		{
-			m_pCurrentElement = m_pHead + index;
-			*m_pCurrentElement = other.At(index - 1); 
+			m_pCurrentElement = m_pHead + index + 1;
+			*m_pCurrentElement = other.At(index);
 		}
 
 		other.Clear();
-		other.ReleaseOldMemory();
+		other.ReleaseOldMemory(other.m_pHead);
 	}
 	CustomContainer<Type>& operator=(const CustomContainer<Type>& other) noexcept
 	{
@@ -57,10 +57,10 @@ public:
 		m_pHead = static_cast<Type*>(calloc(capacity, size)); // maybe make m_pHead actually useful instead of storing memory?
 		m_pTail = m_pHead + capacity;
 
-		for (size_t index{ 1 }; index < other.GetSize(); ++index)
+		for (size_t index{  }; index < other.GetSize(); ++index)
 		{
-			m_pCurrentElement = m_pHead + index;
-			*m_pCurrentElement = other.At(index - 1); 
+			m_pCurrentElement = m_pHead + index + 1;
+			*m_pCurrentElement = other.At(index);
 		}
 	}
 	CustomContainer<Type>& operator=(CustomContainer<Type>&& other) noexcept
@@ -69,14 +69,14 @@ public:
 		m_pHead = static_cast<Type*>(calloc(capacity, size)); // maybe make m_pHead actually useful instead of storing memory?
 		m_pTail = m_pHead + capacity;
 
-		for (size_t index{ 1 }; index < other.GetSize(); ++index)
+		for (size_t index{  }; index < other.GetSize(); ++index)
 		{
-			m_pCurrentElement = m_pHead + index; 
-			*m_pCurrentElement = other.At(index - 1); 
+			m_pCurrentElement = m_pHead + index + 1;
+			*m_pCurrentElement = other.At(index);
 		}
 
 		other.Clear();
-		other.ReleaseOldMemory();
+		other.ReleaseOldMemory(other.m_pHead);
 	}
 
 	inline void Push_back(const Type& val) noexcept
