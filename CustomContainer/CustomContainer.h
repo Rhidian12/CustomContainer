@@ -1,5 +1,6 @@
 #pragma once
 #include <iostream>
+#include <vector>
 class OutOfRangeException
 {
 public:
@@ -13,7 +14,7 @@ class CustomContainer
 public:
 	CustomContainer() noexcept
 	{
-		const uint16_t capacity{ 5 }; // this could be any start value
+		const size_t capacity{ 5 }; // this could be any start value
 		m_pHead = static_cast<Type*>(calloc(capacity, size)); // maybe make m_pHead actually useful instead of storing memory?
 		m_pTail = m_pHead + capacity;
 	}
@@ -21,6 +22,61 @@ public:
 	~CustomContainer() noexcept
 	{
 		ReleaseOldMemory(m_pHead);
+	}
+
+	CustomContainer(const CustomContainer<Type>& other) noexcept
+	{
+		const size_t capacity{ other.GetCapacity() };
+		m_pHead = static_cast<Type*>(calloc(capacity, size)); 
+		m_pTail = m_pHead + capacity;
+
+		for (size_t index{ 1 }; index < other.GetSize(); ++index)
+		{
+			m_pCurrentElement = m_pHead + index; // adjust pointer
+			*m_pCurrentElement = other.At(index); // move element from old memory over
+		}
+	}
+	CustomContainer(CustomContainer<Type>&& other) noexcept
+	{
+		const size_t capacity{ other.GetCapacity() }; // this could be any start value
+		m_pHead = static_cast<Type*>(calloc(capacity, size)); // maybe make m_pHead actually useful instead of storing memory?
+		m_pTail = m_pHead + capacity;
+
+		for (size_t index{ 1 }; index < other.GetSize(); ++index)
+		{
+			m_pCurrentElement = m_pHead + index; // adjust pointer
+			*m_pCurrentElement = other.At(index); // move element from old memory over
+		}
+
+		other.Clear();
+		other.ReleaseOldMemory();
+	}
+	CustomContainer<Type>& operator=(const CustomContainer<Type>& other) noexcept
+	{
+		const size_t capacity{ other.GetCapacity() }; // this could be any start value
+		m_pHead = static_cast<Type*>(calloc(capacity, size)); // maybe make m_pHead actually useful instead of storing memory?
+		m_pTail = m_pHead + capacity;
+
+		for (size_t index{ 1 }; index < other.GetSize(); ++index)
+		{
+			m_pCurrentElement = m_pHead + index; // adjust pointer
+			*m_pCurrentElement = other.At(index); // move element from old memory over
+		}
+	}
+	CustomContainer<Type>& operator=(CustomContainer<Type>&& other) noexcept
+	{
+		const size_t capacity{ other.GetCapacity() }; // this could be any start value
+		m_pHead = static_cast<Type*>(calloc(capacity, size)); // maybe make m_pHead actually useful instead of storing memory?
+		m_pTail = m_pHead + capacity;
+
+		for (size_t index{ 1 }; index < other.GetSize(); ++index)
+		{
+			m_pCurrentElement = m_pHead + index; // adjust pointer
+			*m_pCurrentElement = other.At(index); // move element from old memory over
+		}
+
+		other.Clear();
+		other.ReleaseOldMemory();
 	}
 
 	inline void Push_back(const Type& val) noexcept
@@ -153,7 +209,7 @@ public:
 	}
 
 private:
-	void ReleaseOldMemory(Type* pOldHead) noexcept
+	void ReleaseOldMemory(Type*& pOldHead) noexcept
 	{
 		if (pOldHead)
 		{
