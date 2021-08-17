@@ -5,6 +5,73 @@
 #include <fstream> // std::ofstream
 #include <algorithm> // std::max_element, std::min_element, std::remove_if
 
+#define UNIT_TESTS
+#ifdef UNIT_TESTS
+#define CATCH_CONFIG_MAIN
+#include "catch.hpp"
+
+TEST_CASE("Testing The Container")
+{
+	CustomContainer<int> intContainer{};
+
+	REQUIRE(intContainer.IsEmpty());
+
+	for (int i{}; i <= 20; i += 4)
+		intContainer.Push_back(i);
+
+	REQUIRE(intContainer.GetFront() == 0);
+	REQUIRE(intContainer.GetBack() == 20);
+	REQUIRE(intContainer.GetSize() == 6);
+
+	intContainer[0] = 1;
+	REQUIRE(intContainer.GetFront() == 1);
+
+	REQUIRE(!intContainer.IsEmpty());
+
+	intContainer.Clear();
+
+	REQUIRE(intContainer.IsEmpty());
+	REQUIRE(intContainer.GetSize() == 0);
+
+	for (int i{}; i <= 20; i += 4)
+		intContainer.Push_back(i);
+
+	CustomContainer<int> copyConstructor{ intContainer };
+
+	for (size_t i{}; i < copyConstructor.GetSize(); ++i)
+		REQUIRE(copyConstructor.At(i) == intContainer.At(i));
+
+	REQUIRE(intContainer.GetBack() == 20);
+	REQUIRE(copyConstructor.GetBack() == 20);
+
+	copyConstructor.Clear();
+	
+	REQUIRE(copyConstructor.IsEmpty());
+	REQUIRE(!intContainer.IsEmpty());
+
+	CustomContainer<int> moveConstructor{ std::move(intContainer) };
+
+	REQUIRE(moveConstructor.GetFront() == 0);
+	REQUIRE(moveConstructor.GetBack() == 20);
+	REQUIRE(moveConstructor.GetSize() == 6);
+	REQUIRE(intContainer.IsEmpty());
+
+	REQUIRE_THROWS(intContainer.At(1));
+
+	CustomContainer<int> copyOperator = moveConstructor;
+
+	for (size_t i{}; i < copyOperator.GetSize(); ++i)
+		REQUIRE(copyOperator.At(i) == moveConstructor.At(i));
+
+	CustomContainer<int> moveOperator = std::move(copyOperator);
+
+	REQUIRE(copyOperator.IsEmpty());
+	REQUIRE(moveOperator.GetFront() == 0);
+	REQUIRE(moveOperator.GetBack() == 20);
+	REQUIRE(moveOperator.GetSize() == 6);
+}
+
+#else
 int main(int argc, char* argv[])
 {
 	using Timepoint = std::chrono::high_resolution_clock::time_point;
@@ -124,3 +191,4 @@ int main(int argc, char* argv[])
 
 	return 0;
 }
+#endif // UNIT_TESTS
