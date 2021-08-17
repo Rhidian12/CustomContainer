@@ -33,7 +33,7 @@ public:
 		for (size_t index{ 1 }; index < other.GetSize(); ++index)
 		{
 			m_pCurrentElement = m_pHead + index; // adjust pointer
-			*m_pCurrentElement = other.At(index); // move element from old memory over
+			*m_pCurrentElement = other.At(index - 1); // move element from old memory over
 		}
 	}
 	CustomContainer(CustomContainer<Type>&& other) noexcept
@@ -177,7 +177,7 @@ public:
 		return *m_pCurrentElement;
 	}
 
-	Type& At(const int index)
+	Type& At(const size_t index)
 	{
 		if ((m_pHead + (index + 1)) > m_pCurrentElement)
 			throw OutOfRangeException{ __LINE__, __FILE__ };
@@ -185,7 +185,7 @@ public:
 		return *(m_pHead + (index + 1));
 	}
 
-	const Type& At(const int index) const
+	const Type& At(const size_t index) const
 	{
 		if ((m_pHead + (index + 1)) > m_pTail)
 			throw OutOfRangeException{ __LINE__, __FILE__ };
@@ -198,12 +198,12 @@ public:
 		return m_pCurrentElement == nullptr;
 	}
 
-	Type& operator[](const int index) noexcept
+	Type& operator[](const size_t index) noexcept
 	{
 		return *(m_pHead + (index + 1));
 	}
 
-	const Type& operator[](const int index) const noexcept
+	const Type& operator[](const size_t index) const noexcept
 	{
 		return *(m_pHead + (index + 1));
 	}
