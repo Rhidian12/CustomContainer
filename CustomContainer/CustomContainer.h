@@ -32,8 +32,8 @@ public:
 
 		for (size_t index{ 1 }; index < other.GetSize(); ++index)
 		{
-			m_pCurrentElement = m_pHead + index; // adjust pointer
-			*m_pCurrentElement = other.At(index - 1); // move element from old memory over
+			m_pCurrentElement = m_pHead + index; 
+			*m_pCurrentElement = other.At(index - 1);
 		}
 	}
 	CustomContainer(CustomContainer<Type>&& other) noexcept
@@ -44,8 +44,8 @@ public:
 
 		for (size_t index{ 1 }; index < other.GetSize(); ++index)
 		{
-			m_pCurrentElement = m_pHead + index; // adjust pointer
-			*m_pCurrentElement = other.At(index); // move element from old memory over
+			m_pCurrentElement = m_pHead + index;
+			*m_pCurrentElement = other.At(index - 1); 
 		}
 
 		other.Clear();
@@ -59,8 +59,8 @@ public:
 
 		for (size_t index{ 1 }; index < other.GetSize(); ++index)
 		{
-			m_pCurrentElement = m_pHead + index; // adjust pointer
-			*m_pCurrentElement = other.At(index); // move element from old memory over
+			m_pCurrentElement = m_pHead + index;
+			*m_pCurrentElement = other.At(index - 1); 
 		}
 	}
 	CustomContainer<Type>& operator=(CustomContainer<Type>&& other) noexcept
@@ -71,8 +71,8 @@ public:
 
 		for (size_t index{ 1 }; index < other.GetSize(); ++index)
 		{
-			m_pCurrentElement = m_pHead + index; // adjust pointer
-			*m_pCurrentElement = other.At(index); // move element from old memory over
+			m_pCurrentElement = m_pHead + index; 
+			*m_pCurrentElement = other.At(index - 1); 
 		}
 
 		other.Clear();
