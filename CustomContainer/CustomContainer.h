@@ -144,7 +144,7 @@ public:
 		m_pCurrentElement = nullptr;
 	}
 
-	[[nodiscard]] inline size_t GetSize() const noexcept
+	size_t GetSize() const noexcept
 	{
 		if (!m_pCurrentElement)
 			return 0;
@@ -152,32 +152,32 @@ public:
 		return (m_pCurrentElement - m_pHead);
 	}
 
-	[[nodiscard]] inline size_t GetCapacity() const noexcept
+	size_t GetCapacity() const noexcept
 	{
 		return (m_pTail - m_pHead);
 	}
 
-	[[nodiscard]] inline Type& GetFront() noexcept
+	Type& GetFront() noexcept
 	{
 		return *(m_pHead + 1);
 	}
 
-	[[nodiscard]] inline const Type& GetFront() const noexcept
+	const Type& GetFront() const noexcept
 	{
 		return *(m_pHead + 1);
 	}
 
-	[[nodiscard]] inline Type& GetBack() noexcept
+	Type& GetBack() noexcept
 	{
 		return *m_pCurrentElement;
 	}
 
-	[[nodiscard]] inline const Type& GetBack() const noexcept
+	const Type& GetBack() const noexcept
 	{
 		return *m_pCurrentElement;
 	}
 
-	[[nodiscard]] inline Type& At(const int index)
+	Type& At(const int index)
 	{
 		if ((m_pHead + (index + 1)) > m_pCurrentElement)
 			throw OutOfRangeException{ __LINE__, __FILE__ };
@@ -185,7 +185,7 @@ public:
 		return *(m_pHead + (index + 1));
 	}
 
-	[[nodiscard]] inline const Type& At(const int index) const
+	const Type& At(const int index) const
 	{
 		if ((m_pHead + (index + 1)) > m_pTail)
 			throw OutOfRangeException{ __LINE__, __FILE__ };
@@ -193,17 +193,17 @@ public:
 		return *(m_pHead + (index + 1));
 	}
 
-	[[nodiscard]] inline bool IsEmpty() const noexcept
+	const bool IsEmpty() const noexcept
 	{
 		return m_pCurrentElement == nullptr;
 	}
 
-	[[nodiscard]] inline Type& operator[](const int index) noexcept
+	Type& operator[](const int index) noexcept
 	{
 		return *(m_pHead + (index + 1));
 	}
 
-	[[nodiscard]] inline const Type& operator[](const int index) const noexcept
+	const Type& operator[](const int index) const noexcept
 	{
 		return *(m_pHead + (index + 1));
 	}
@@ -231,7 +231,7 @@ private:
 		for (size_t index{ 1 }; index < oldSize; ++index)
 		{
 			m_pCurrentElement = m_pHead + index; // adjust pointer
-			*m_pCurrentElement = std::move(*(pOldHead + index)); // move element from old memory over
+			*m_pCurrentElement = *(pOldHead + index); // move element from old memory over
 		}
 
 		ReleaseOldMemory(pOldHead);
