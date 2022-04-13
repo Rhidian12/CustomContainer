@@ -183,13 +183,15 @@ template<typename Type>
 CustomContainer<Type>::CustomContainer(const CustomContainer<Type>& other) noexcept
 {
 	const size_t capacity{ other.GetCapacity() };
+
+	/* [TODO]: Change calloc to malloc */
 	m_pHead = static_cast<Type*>(calloc(capacity, SizeOfType));
 	m_pTail = m_pHead + capacity;
 
-	for (size_t index{  }; index < other.GetSize(); ++index)
+	for (size_t index{}; index < other.GetSize(); ++index)
 	{
-		m_pCurrentElement = m_pHead + index + 1;
-		*m_pCurrentElement = other.At(index);
+		m_pCurrentElement = m_pHead + index;
+		*m_pCurrentElement = *(other.m_pHead + index + 1);
 	}
 }
 
@@ -197,6 +199,7 @@ template<typename Type>
 CustomContainer<Type>::CustomContainer(CustomContainer<Type>&& other) noexcept
 {
 	const size_t capacity{ other.GetCapacity() }; // this could be any start value
+	/* [TODO]: Change calloc to malloc */
 	m_pHead = static_cast<Type*>(calloc(capacity, SizeOfType)); // maybe make m_pHead actually useful instead of storing memory?
 	m_pTail = m_pHead + capacity;
 
@@ -214,6 +217,7 @@ template<typename Type>
 CustomContainer<Type>& CustomContainer<Type>::operator=(const CustomContainer<Type>& other) noexcept
 {
 	const size_t capacity{ other.GetCapacity() }; // this could be any start value
+	/* [TODO]: Change calloc to malloc */
 	m_pHead = static_cast<Type*>(calloc(capacity, SizeOfType)); // maybe make m_pHead actually useful instead of storing memory?
 	m_pTail = m_pHead + capacity;
 
@@ -228,6 +232,7 @@ template<typename Type>
 CustomContainer<Type>& CustomContainer<Type>::operator=(CustomContainer<Type>&& other) noexcept
 {
 	const size_t capacity{ other.GetCapacity() }; // this could be any start value
+	/* [TODO]: Change calloc to malloc */
 	m_pHead = static_cast<Type*>(calloc(capacity, SizeOfType)); // maybe make m_pHead actually useful instead of storing memory?
 	m_pTail = m_pHead + capacity;
 
