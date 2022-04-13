@@ -51,29 +51,7 @@ private:
 
 	void DeleteData(Type* pHead, Type* const pTail);
 
-	void Reallocate()
-	{
-		ASSERT((CurrentElement >= Tail), "Container::Reallocate() > Reallocating while there is still memory left!");
-
-		const size_t oldCapacity{ size_t(Tail - Head) }; // also oldSize
-		const size_t newCapacity{ oldCapacity != 0 ? oldCapacity * 2 : 1 };
-
-		Type* pOldHead{ Head };
-		Type* const pOldTail{ Tail };
-
-		/* [TODO]: Change calloc to malloc */
-		Head = static_cast<Type*>(calloc(newCapacity, SizeOfType));
-		Tail = Head + newCapacity;
-
-		for (size_t index{}; index < oldCapacity; ++index)
-		{
-			CurrentElement = Head + index; // adjust pointer
-			*CurrentElement = std::move(*(pOldHead + index)); // move element from old memory over
-		}
-
-		DeleteData(pOldHead, pOldTail);
-		ReleaseMemory(pOldHead);
-	}
+	void Reallocate();
 
 	Type* Head{ nullptr };
 	Type* Tail{ nullptr };
@@ -293,4 +271,29 @@ void CustomContainer<Type>::DeleteData(Type* pHead, Type* const pTail)
 			++pHead;
 		}
 	}
+}
+
+template<typename Type>
+void CustomContainer<Type>::Reallocate()
+{
+	ASSERT((CurrentElement >= Tail), "Container::Reallocate() > Reallocating while there is still memory left!");
+
+	const size_t oldCapacity{ size_t(Tail - Head) }; // also oldSize
+	const size_t newCapacity{ oldCapacity != 0 ? oldCapacity * 2 : 1 };
+
+	Type* pOldHead{ Head };
+	Type* const pOldTail{ Tail };
+
+	/* [TODO]: Change calloc to malloc */
+	Head = static_cast<Type*>(calloc(newCapacity, SizeOfType));
+	Tail = Head + newCapacity;
+
+	for (size_t index{}; index < oldCapacity; ++index)
+	{
+		CurrentElement = Head + index; // adjust pointer
+		*CurrentElement = std::move(*(pOldHead + index)); // move element from old memory over
+	}
+
+	DeleteData(pOldHead, pOldTail);
+	ReleaseMemory(pOldHead);
 }
