@@ -156,11 +156,18 @@ void CustomContainer<Type>::Emplace(Values&&... val)
 	if (!CurrentElement || CurrentElement > Tail)
 	{
 		Reallocate();
+
+		/* Safety check, after the first allocation, this will still be 0 */
+		if (!CurrentElement)
+		{
+			CurrentElement = Head + 1;
+		}
 	}
 
 	/* [TODO]: AN ALLOCATOR SHOULD DO THIS */
 	// CurrentElement = new Type(std::forward<Values>(val)...);
 	*CurrentElement = Type(std::forward<Values>(val)...);
+	++CurrentElement;
 }
 
 template<typename Type>
