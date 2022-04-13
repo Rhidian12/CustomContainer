@@ -38,6 +38,8 @@ public:
 	Type& Back();
 	const Type& Back() const;
 
+	bool Empty() const;
+
 	Type& At(const size_t index)
 	{
 		ASSERT(((Head + (index + 1)) > CurrentElement), "Container::At() > Index was out of range!");
@@ -50,11 +52,6 @@ public:
 		ASSERT(((Head + (index + 1)) > Tail), "Container::At() > Index was out of range!");
 
 		return *(Head + (index + 1));
-	}
-
-	const bool IsEmpty() const noexcept
-	{
-		return CurrentElement == nullptr;
 	}
 
 	Type& operator[](const size_t index) noexcept
@@ -267,4 +264,10 @@ const Type& CustomContainer<Type>::Back() const
 	ASSERT((CurrentElement != nullptr), "Container::Back() > Out of range!");
 
 	return *CurrentElement;
+}
+
+template<typename Type>
+bool CustomContainer<Type>::Empty() const
+{
+	return CurrentElement == nullptr;
 }
