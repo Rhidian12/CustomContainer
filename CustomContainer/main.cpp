@@ -24,7 +24,7 @@ TEST_CASE("Testing The Container")
 	REQUIRE(intContainer.Size() == 6);
 
 	intContainer[0] = 1;
-	REQUIRE(intContainer.GetFront() == 1);
+	REQUIRE(intContainer.Front() == 1);
 
 	REQUIRE(!intContainer.IsEmpty());
 
@@ -41,8 +41,8 @@ TEST_CASE("Testing The Container")
 	for (size_t i{}; i < copyConstructor.Size(); ++i)
 		REQUIRE(copyConstructor.At(i) == intContainer.At(i));
 
-	REQUIRE(intContainer.GetBack() == 20);
-	REQUIRE(copyConstructor.GetBack() == 20);
+	REQUIRE(intContainer.Back() == 20);
+	REQUIRE(copyConstructor.Back() == 20);
 
 	copyConstructor.Clear();
 	
@@ -51,8 +51,8 @@ TEST_CASE("Testing The Container")
 
 	CustomContainer<int> moveConstructor{ std::move(intContainer) };
 
-	REQUIRE(moveConstructor.GetFront() == 0);
-	REQUIRE(moveConstructor.GetBack() == 20);
+	REQUIRE(moveConstructor.Front() == 0);
+	REQUIRE(moveConstructor.Back() == 20);
 	REQUIRE(moveConstructor.Size() == 6);
 	REQUIRE(intContainer.IsEmpty());
 
@@ -66,8 +66,8 @@ TEST_CASE("Testing The Container")
 	CustomContainer<int> moveOperator = std::move(copyOperator);
 
 	REQUIRE(copyOperator.IsEmpty());
-	REQUIRE(moveOperator.GetFront() == 0);
-	REQUIRE(moveOperator.GetBack() == 20);
+	REQUIRE(moveOperator.Front() == 0);
+	REQUIRE(moveOperator.Back() == 20);
 	REQUIRE(moveOperator.Size() == 6);
 }
 
