@@ -25,9 +25,9 @@ public:
 
 	void Clear();
 
-	size_t GetSize() const;
+	size_t Size() const;
 
-	size_t GetCapacity() const;
+	size_t Capacity() const;
 
 	Type& Front();
 	const Type& Front() const;
@@ -65,13 +65,13 @@ CustomContainer<Type>::~CustomContainer()
 template<typename Type>
 CustomContainer<Type>::CustomContainer(const CustomContainer<Type>& other) noexcept
 {
-	const size_t capacity{ other.GetCapacity() };
+	const size_t capacity{ other.Capacity() };
 
 	/* [TODO]: Change calloc to malloc */
 	Head = static_cast<Type*>(calloc(capacity, SizeOfType));
 	Tail = Head + capacity;
 
-	for (size_t index{}; index < other.GetSize(); ++index)
+	for (size_t index{}; index < other.Size(); ++index)
 	{
 		CurrentElement = Head + index;
 		*CurrentElement = *(other.Head + index);
@@ -84,7 +84,7 @@ CustomContainer<Type>::CustomContainer(CustomContainer<Type>&& other) noexcept
 	, Tail{ std::move(other.Tail) }
 	, CurrentElement{ std::move(other.CurrentElement) }
 {
-	for (size_t index{}; index < other.GetSize(); ++index)
+	for (size_t index{}; index < other.Size(); ++index)
 	{
 		*(Head + index) = std::move(*(other.Head + index));
 	}
@@ -100,13 +100,13 @@ CustomContainer<Type>::CustomContainer(CustomContainer<Type>&& other) noexcept
 template<typename Type>
 CustomContainer<Type>& CustomContainer<Type>::operator=(const CustomContainer<Type>& other) noexcept
 {
-	const size_t capacity{ other.GetCapacity() };
+	const size_t capacity{ other.Capacity() };
 
 	/* [TODO]: Change calloc to malloc */
 	Head = static_cast<Type*>(calloc(capacity, SizeOfType));
 	Tail = Head + capacity;
 
-	for (size_t index{}; index < other.GetSize(); ++index)
+	for (size_t index{}; index < other.Size(); ++index)
 	{
 		CurrentElement = Head + index;
 		*CurrentElement = *(other.Head + index);
@@ -122,7 +122,7 @@ CustomContainer<Type>& CustomContainer<Type>::operator=(CustomContainer<Type>&& 
 	Tail = std::move(other.Tail);
 	CurrentElement = std::move(other.CurrentElement);
 
-	for (size_t index{}; index < other.GetSize(); ++index)
+	for (size_t index{}; index < other.Size(); ++index)
 	{
 		*(Head + index) = std::move(*(other.Head + index));
 	}
@@ -170,13 +170,13 @@ void CustomContainer<Type>::Clear()
 }
 
 template<typename Type>
-size_t CustomContainer<Type>::GetSize() const
+size_t CustomContainer<Type>::Size() const
 {
 	return CurrentElement - Head;
 }
 
 template<typename Type>
-size_t CustomContainer<Type>::GetCapacity() const
+size_t CustomContainer<Type>::Capacity() const
 {
 	return Tail - Head;
 }
