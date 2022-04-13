@@ -13,6 +13,7 @@ public:
 		ReleaseOldMemory(Head);
 	}
 
+	/* If these aren't marked as noexcept, VS keeps complaining */
 	CustomContainer<Type>(const CustomContainer<Type>& other) noexcept;
 	CustomContainer<Type>(CustomContainer<Type>&& other) noexcept;
 	CustomContainer<Type>& operator=(const CustomContainer<Type>& other) noexcept;
