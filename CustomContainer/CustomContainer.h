@@ -156,16 +156,21 @@ template<typename Type>
 template<typename ...Values>
 void CustomContainer<Type>::Emplace(Values&&... val)
 {
-	if (!CurrentElement || CurrentElement >= Tail)
+	Type* const pNextBlock{ CurrentElement != nullptr ? CurrentElement + 1 : Head };
+
+	if (!CurrentElement || pNextBlock >= Tail)
 	{
 		ReallocateAndEmplace(std::forward<Values>(val)...);
+
+		// CurrentElement = Head;
 	}
 	else
 	{
 		/* [TODO]: AN ALLOCATOR SHOULD DO THIS */
 		// CurrentElement = new Type(std::forward<Values>(val)...);
-		*CurrentElement = Type(std::forward<Values>(val)...);
-		++CurrentElement;
+		*pNextBlock = Type(std::forward<Values>(val)...);
+
+		CurrentElement = pNextBlock;
 	}
 }
 
@@ -173,12 +178,14 @@ template<typename Type>
 void CustomContainer<Type>::Clear()
 {
 	DeleteData(Head, Tail);
+
+	CurrentElement = nullptr;
 }
 
 template<typename Type>
 size_t CustomContainer<Type>::Size() const
 {
-	return CurrentElement - Head;
+	return CurrentElement != nullptr ? CurrentElement - Head : 0;
 }
 
 template<typename Type>
@@ -279,7 +286,8 @@ void CustomContainer<Type>::DeleteData(Type* pHead, Type* const pTail)
 template<typename Type>
 void CustomContainer<Type>::Reallocate()
 {
-	ASSERT((CurrentElement >= Tail), "Container::Reallocate() > Reallocating while there is still memory left!");
+	if (CurrentElement)
+		ASSERT(((CurrentElement + 1) >= Tail), "Container::Reallocate() > Reallocating while there is still memory left!");
 
 	const size_t oldCapacity{ size_t(Tail - Head) }; // also oldSize
 	const size_t newCapacity{ oldCapacity != 0 ? oldCapacity * 2 : 1 };
@@ -297,17 +305,6 @@ void CustomContainer<Type>::Reallocate()
 		*CurrentElement = std::move(*(pOldHead + index)); // move element from old memory over
 	}
 
-	/* If this is the not the first allocation, move CurrentElement to the next free block */
-	if (CurrentElement)
-	{
-		++CurrentElement;
-	}
-	/* The first allocation in memory will not set CurrentElement itself */
-	else
-	{
-		CurrentElement = Head;
-	}
-
 	DeleteData(pOldHead, pOldTail);
 	ReleaseMemory(pOldHead);
 }
@@ -318,8 +315,16 @@ void CustomContainer<Type>::ReallocateAndEmplace(Values && ...values)
 {
 	Reallocate();
 
+	if (!CurrentElement)
+	{
+		CurrentElement = Head;
+	}
+	else
+	{
+		++CurrentElement;
+	}
+
 	/* [TODO]: AN ALLOCATOR SHOULD DO THIS */
 	// CurrentElement = new Type(std::forward<Values>(val)...);
 	*CurrentElement = Type(std::forward<Values>(values)...);
-	++CurrentElement;
 }
