@@ -1,6 +1,7 @@
 #pragma once
 #include "Utils.h"
 
+/* [TODO]: Make Allocator */
 template<typename Type>
 class CustomContainer final
 {
@@ -133,14 +134,14 @@ private:
 		}
 	}
 
-	void Reallocate() noexcept
+	void Reallocate()
 	{
-		ASSERT(CurrentElement >= Tail, "Container::Reallocate() > Reallocating while there is still memory left!");
+		ASSERT((CurrentElement >= Tail), "Container::Reallocate() > Reallocating while there is still memory left!");
 
 		const size_t oldCapacity{ size_t(Tail - Head) }; // also oldSize
 		const size_t newCapacity{ oldCapacity != 0 ? oldCapacity * 2 : 1 };
 
-		Type* const pOldHead{ Head };
+		Type* pOldHead{ Head };
 		Type* const pOldTail{ Tail };
 
 		/* [TODO]: Change calloc to malloc */
@@ -247,7 +248,12 @@ template<typename Type>
 template<typename ...Values>
 void CustomContainer<Type>::Emplace(Values&&... val)
 {
+	if (!CurrentElement || CurrentElement > Tail)
+	{
+		Reallocate();
+	}
 
+	CurrentElement = new Type(std::forward<Values>(val)...);
 }
 
 template<typename Type>
