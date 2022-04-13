@@ -9,10 +9,7 @@ class CustomContainer final
 public:
 	CustomContainer() = default;
 
-	~CustomContainer()
-	{
-		ReleaseMemory(Head);
-	}
+	~CustomContainer();
 
 	/* If these aren't marked as noexcept, VS keeps complaining */
 	CustomContainer<Type>(const CustomContainer<Type>& other) noexcept;
