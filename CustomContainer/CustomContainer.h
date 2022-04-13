@@ -38,7 +38,7 @@ public:
 	Type& Back();
 	const Type& Back() const;
 
-	bool Empty() const;
+	bool IsEmpty() const;
 
 	Type& At(const size_t index)
 	{
@@ -267,7 +267,7 @@ const Type& CustomContainer<Type>::Back() const
 }
 
 template<typename Type>
-bool CustomContainer<Type>::Empty() const
+bool CustomContainer<Type>::IsEmpty() const
 {
 	return CurrentElement == nullptr;
 }
