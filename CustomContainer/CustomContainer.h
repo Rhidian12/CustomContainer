@@ -217,16 +217,19 @@ CustomContainer<Type>::CustomContainer(CustomContainer<Type>&& other) noexcept
 template<typename Type>
 CustomContainer<Type>& CustomContainer<Type>::operator=(const CustomContainer<Type>& other) noexcept
 {
-	const size_t capacity{ other.GetCapacity() }; // this could be any start value
+	const size_t capacity{ other.GetCapacity() };
+
 	/* [TODO]: Change calloc to malloc */
-	Head = static_cast<Type*>(calloc(capacity, SizeOfType)); // maybe make m_pHead actually useful instead of storing memory?
+	Head = static_cast<Type*>(calloc(capacity, SizeOfType));
 	Tail = Head + capacity;
 
-	for (size_t index{  }; index < other.GetSize(); ++index)
+	for (size_t index{}; index < other.GetSize(); ++index)
 	{
-		CurrentElement = Head + index + 1;
-		*CurrentElement = other.At(index);
+		CurrentElement = Head + index;
+		*CurrentElement = *(other.Head + index);
 	}
+
+	return *this;
 }
 
 template<typename Type>
