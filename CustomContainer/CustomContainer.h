@@ -47,7 +47,7 @@ public:
 	const Type& operator[](size_t index) const;
 
 private:
-	void ReleaseMemory(Type*& pOldHead) noexcept
+	void ReleaseMemory(Type*& pOldHead)
 	{
 		if (pOldHead)
 		{
@@ -287,4 +287,14 @@ template<typename Type>
 const Type& CustomContainer<Type>::operator[](size_t index) const
 {
 	return *(Head + index);
+}
+
+template<typename Type>
+void CustomContainer<Type>::ReleaseMemory(Type*& pOldHead)
+{
+	if (pOldHead)
+	{
+		free(pOldHead);
+		pOldHead = nullptr;
+	}
 }
