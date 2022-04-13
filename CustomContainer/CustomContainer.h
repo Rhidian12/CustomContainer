@@ -24,6 +24,8 @@ public:
 	template<typename ... Values>
 	void Emplace(Values&&... val);
 
+	void Pop();
+
 	void Clear();
 
 	size_t Size() const;
@@ -168,6 +170,25 @@ void CustomContainer<Type>::Emplace(Values&&... val)
 
 		CurrentElement = pNextBlock;
 	}
+}
+
+template<typename Type>
+void CustomContainer<Type>::Pop()
+{
+	if (Size() <= 0)
+		return;
+
+	DeleteData(CurrentElement, CurrentElement);
+
+	Type* pPreviousBlock{ CurrentElement - 1 };
+	
+	if (pPreviousBlock < Head)
+	{
+		pPreviousBlock = nullptr;
+	}
+
+	CurrentElement = nullptr;
+	CurrentElement = pPreviousBlock;
 }
 
 template<typename Type>
@@ -382,7 +403,7 @@ void CustomContainer<Type>::ResizeToSmaller(size_t newSize)
 
 	for (size_t i{}; i < sizeDifference; ++i)
 	{
-		/* [TODO]: Add pop_back */
+		Pop();
 	}
 }
 
