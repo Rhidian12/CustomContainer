@@ -2,6 +2,7 @@
 #include "Utils.h"
 
 /* [TODO]: Make Allocator */
+/* [TODO]: Make Iterators */
 template<typename Type>
 class CustomContainer final
 {
@@ -42,6 +43,8 @@ public:
 
 	Type& operator[](size_t index);
 	const Type& operator[](size_t index) const;
+
+	Type* const Data() const;
 
 private:
 	void ReleaseMemory(Type*& pOldHead);
@@ -243,6 +246,12 @@ template<typename Type>
 const Type& CustomContainer<Type>::operator[](size_t index) const
 {
 	return *(Head + index);
+}
+
+template<typename Type>
+Type* const CustomContainer<Type>::Data() const
+{
+	return Head;
 }
 
 template<typename Type>
