@@ -1,14 +1,8 @@
 #pragma once
 #include <iostream>
-#include <vector>
-class OutOfRangeException
-{
-public:
-	OutOfRangeException(const int line, const char* pFile) { std::cout << "Calling At() from file: " << pFile << " at line: " << line << " was out of bounds" << std::endl; }
-};
 
 template<typename Type>
-class CustomContainer
+class CustomContainer final
 {
 	inline static constexpr size_t size = sizeof(Type);
 public:
@@ -180,7 +174,7 @@ public:
 	Type& At(const size_t index)
 	{
 		if ((m_pHead + (index + 1)) > m_pCurrentElement)
-			throw OutOfRangeException{ __LINE__, __FILE__ };
+			return 0;
 
 		return *(m_pHead + (index + 1));
 	}
@@ -188,7 +182,7 @@ public:
 	const Type& At(const size_t index) const
 	{
 		if ((m_pHead + (index + 1)) > m_pTail)
-			throw OutOfRangeException{ __LINE__, __FILE__ };
+			return 0;
 
 		return *(m_pHead + (index + 1));
 	}
