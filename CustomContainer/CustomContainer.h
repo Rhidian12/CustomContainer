@@ -11,7 +11,7 @@ public:
 
 	~CustomContainer()
 	{
-		ReleaseOldMemory(Head);
+		ReleaseMemory(Head);
 	}
 
 	/* If these aren't marked as noexcept, VS keeps complaining */
@@ -47,7 +47,7 @@ public:
 	const Type& operator[](size_t index) const;
 
 private:
-	void ReleaseOldMemory(Type*& pOldHead) noexcept
+	void ReleaseMemory(Type*& pOldHead) noexcept
 	{
 		if (pOldHead)
 		{
@@ -89,7 +89,7 @@ private:
 		}
 
 		DeleteData(pOldHead, pOldTail);
-		ReleaseOldMemory(pOldHead);
+		ReleaseMemory(pOldHead);
 	}
 
 	Type* Head{ nullptr };
@@ -101,7 +101,7 @@ template<typename Type>
 CustomContainer<Type>::~CustomContainer()
 {
 	DeleteData(Head, Tail);
-	ReleaseOldMemory(Head);
+	ReleaseMemory(Head);
 }
 
 template<typename Type>
@@ -132,7 +132,7 @@ CustomContainer<Type>::CustomContainer(CustomContainer<Type>&& other) noexcept
 	}
 
 	other.Clear();
-	other.ReleaseOldMemory(other.Head);
+	other.ReleaseMemory(other.Head);
 
 	other.Head = nullptr;
 	other.Tail = nullptr;
@@ -170,7 +170,7 @@ CustomContainer<Type>& CustomContainer<Type>::operator=(CustomContainer<Type>&& 
 	}
 
 	other.Clear();
-	other.ReleaseOldMemory(other.Head);
+	other.ReleaseMemory(other.Head);
 
 	other.Head = nullptr;
 	other.Tail = nullptr;
