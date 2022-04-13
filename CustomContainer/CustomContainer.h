@@ -70,8 +70,7 @@ CustomContainer<Type>::CustomContainer(const CustomContainer<Type>& other) noexc
 {
 	const size_t capacity{ other.Capacity() };
 
-	/* [TODO]: Change calloc to malloc */
-	Head = static_cast<Type*>(calloc(capacity, SizeOfType));
+	Head = static_cast<Type*>(malloc(SizeOfType * capacity));
 	Tail = Head + capacity;
 
 	for (size_t index{}; index < other.Size(); ++index)
@@ -98,8 +97,7 @@ CustomContainer<Type>& CustomContainer<Type>::operator=(const CustomContainer<Ty
 {
 	const size_t capacity{ other.Capacity() };
 
-	/* [TODO]: Change calloc to malloc */
-	Head = static_cast<Type*>(calloc(capacity, SizeOfType));
+	Head = static_cast<Type*>(malloc(SizeOfType * capacity));
 	Tail = Head + capacity;
 
 	for (size_t index{}; index < other.Size(); ++index)
@@ -282,8 +280,7 @@ void CustomContainer<Type>::Reallocate()
 	Type* pOldHead{ Head };
 	Type* const pOldTail{ Tail };
 
-	/* [TODO]: Change calloc to malloc */
-	Head = static_cast<Type*>(calloc(newCapacity, SizeOfType));
+	Head = static_cast<Type*>(malloc(SizeOfType * newCapacity));
 	Tail = Head + newCapacity;
 
 	for (size_t index{}; index < oldCapacity; ++index)
