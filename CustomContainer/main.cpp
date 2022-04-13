@@ -78,6 +78,9 @@ TEST_CASE("Testing The Container")
 	REQUIRE(moveOperator.Size() == 20);
 
 	REQUIRE(moveOperator.Data() == &moveOperator.Front());
+	
+	moveOperator.Reserve(100);
+	REQUIRE(moveOperator.Capacity() == 100);
 }
 
 #else
