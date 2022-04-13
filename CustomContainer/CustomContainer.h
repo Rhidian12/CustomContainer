@@ -1,5 +1,5 @@
 #pragma once
-#include <iostream>
+#include "Utils.h"
 
 template<typename Type>
 class CustomContainer final
@@ -173,16 +173,14 @@ public:
 
 	Type& At(const size_t index)
 	{
-		if ((m_pHead + (index + 1)) > m_pCurrentElement)
-			return *m_pHead;
+		ASSERT((m_pHead + (index + 1)) > m_pCurrentElement, "Container::At() > Index was out of range!");
 
 		return *(m_pHead + (index + 1));
 	}
 
 	const Type& At(const size_t index) const
 	{
-		if ((m_pHead + (index + 1)) > m_pTail)
-			return *m_pHead;
+		ASSERT((m_pHead + (index + 1)) > m_pTail, "Container::At() > Index was out of range!");
 
 		return *(m_pHead + (index + 1));
 	}
