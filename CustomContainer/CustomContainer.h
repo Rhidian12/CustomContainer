@@ -40,18 +40,11 @@ public:
 
 	bool IsEmpty() const;
 
-	Type& At(const size_t index);
-	const Type& At(const size_t index) const;
+	Type& At(size_t index);
+	const Type& At(size_t index) const;
 
-	Type& operator[](const size_t index) noexcept
-	{
-		return *(Head + (index + 1));
-	}
-
-	const Type& operator[](const size_t index) const noexcept
-	{
-		return *(Head + (index + 1));
-	}
+	Type& operator[](size_t index);
+	const Type& operator[](size_t index) const;
 
 private:
 	void ReleaseOldMemory(Type*& pOldHead) noexcept
@@ -103,6 +96,13 @@ private:
 	Type* Tail{ nullptr };
 	Type* CurrentElement{ nullptr };
 };
+
+template<typename Type>
+CustomContainer<Type>::~CustomContainer()
+{
+	DeleteData(Head, Tail);
+	ReleaseOldMemory(Head);
+}
 
 template<typename Type>
 CustomContainer<Type>::CustomContainer(const CustomContainer<Type>& other) noexcept
@@ -274,5 +274,17 @@ const Type& CustomContainer<Type>::At(size_t index) const
 {
 	ASSERT(((Head + index) > CurrentElement), "Container::At() > Index was out of range!");
 
+	return *(Head + index);
+}
+
+template<typename Type>
+Type& CustomContainer<Type>::operator[](size_t index)
+{
+	return *(Head + index);
+}
+
+template<typename Type>
+const Type& CustomContainer<Type>::operator[](size_t index) const
+{
 	return *(Head + index);
 }
