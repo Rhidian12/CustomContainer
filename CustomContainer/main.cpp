@@ -81,6 +81,9 @@ TEST_CASE("Testing The Container")
 	
 	moveOperator.Reserve(100);
 	REQUIRE(moveOperator.Capacity() == 100);
+
+	moveOperator.ShrinkToFit();
+	REQUIRE(moveOperator.Capacity() == moveOperator.Size());
 }
 
 #else

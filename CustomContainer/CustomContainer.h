@@ -32,6 +32,8 @@ public:
 
 	void Reserve(size_t newCapacity);
 
+	void ShrinkToFit();
+
 	Type& Front();
 	const Type& Front() const;
 
@@ -195,6 +197,15 @@ void CustomContainer<Type>::Reserve(size_t newCapacity)
 }
 
 template<typename Type>
+void CustomContainer<Type>::ShrinkToFit()
+{
+	if (Size() == Capacity())
+		return;
+
+	Reallocate(Size());
+}
+
+template<typename Type>
 Type& CustomContainer<Type>::Front()
 {
 	ASSERT((Head != nullptr), "Container::Front() > Out of range!");
@@ -317,7 +328,7 @@ void CustomContainer<Type>::Reallocate()
 template<typename Type>
 void CustomContainer<Type>::Reallocate(size_t newCapacity)
 {
-	const size_t oldCapacity{ size_t(Tail - Head) }; // also oldSize
+	const size_t size{ Size() };
 
 	Type* pOldHead{ Head };
 	Type* const pOldTail{ Tail };
@@ -325,7 +336,7 @@ void CustomContainer<Type>::Reallocate(size_t newCapacity)
 	Head = static_cast<Type*>(malloc(SizeOfType * newCapacity));
 	Tail = Head + newCapacity;
 
-	for (size_t index{}; index < oldCapacity; ++index)
+	for (size_t index{}; index < size; ++index)
 	{
 		CurrentElement = Head + index; // adjust pointer
 		*CurrentElement = std::move(*(pOldHead + index)); // move element from old memory over
