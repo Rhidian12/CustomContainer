@@ -195,7 +195,7 @@ const Type& CustomContainer<Type>::Front() const
 {
 	ASSERT((Head != nullptr), "Container::Front() > Out of range!");
 
-	return *(Head + 1);
+	return *(Head);
 }
 
 template<typename Type>
