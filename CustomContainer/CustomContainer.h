@@ -28,38 +28,15 @@ public:
 
 	void Clear();
 
-	size_t GetSize() const noexcept
-	{
-		if (!CurrentElement)
-			return 0;
+	size_t GetSize() const;
 
-		return (CurrentElement - Head);
-	}
+	size_t GetCapacity() const;
 
-	size_t GetCapacity() const noexcept
-	{
-		return (Tail - Head);
-	}
+	Type& Front();
+	const Type& Front() const;
 
-	Type& GetFront() noexcept
-	{
-		return *(Head + 1);
-	}
-
-	const Type& GetFront() const noexcept
-	{
-		return *(Head + 1);
-	}
-
-	Type& GetBack() noexcept
-	{
-		return *CurrentElement;
-	}
-
-	const Type& GetBack() const noexcept
-	{
-		return *CurrentElement;
-	}
+	Type& Back();
+	const Type& Back() const;
 
 	Type& At(const size_t index)
 	{
@@ -246,4 +223,48 @@ template<typename Type>
 void CustomContainer<Type>::Clear()
 {
 	DeleteData(Head, Tail);
+}
+
+template<typename Type>
+size_t CustomContainer<Type>::GetSize() const
+{
+	return CurrentElement - Head;
+}
+
+template<typename Type>
+size_t CustomContainer<Type>::GetCapacity() const
+{
+	return Tail - Head;
+}
+
+template<typename Type>
+Type& CustomContainer<Type>::Front()
+{
+	ASSERT((Head != nullptr), "Container::Front() > Out of range!");
+
+	return *(Head);
+}
+
+template<typename Type>
+const Type& CustomContainer<Type>::Front() const
+{
+	ASSERT((Head != nullptr), "Container::Front() > Out of range!");
+
+	return *(Head + 1);
+}
+
+template<typename Type>
+Type& CustomContainer<Type>::Back()
+{
+	ASSERT((CurrentElement != nullptr), "Container::Back() > Out of range!");
+
+	return *CurrentElement;
+}
+
+template<typename Type>
+const Type& CustomContainer<Type>::Back() const
+{
+	ASSERT((CurrentElement != nullptr), "Container::Back() > Out of range!");
+
+	return *CurrentElement;
 }
