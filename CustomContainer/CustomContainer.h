@@ -47,26 +47,9 @@ public:
 	const Type& operator[](size_t index) const;
 
 private:
-	void ReleaseMemory(Type*& pOldHead)
-	{
-		if (pOldHead)
-		{
-			free(pOldHead);
-			pOldHead = nullptr;
-		}
-	}
+	void ReleaseMemory(Type*& pOldHead);
 
-	void DeleteData(Type* pHead, Type* const pTail)
-	{
-		if constexpr (!std::is_trivially_destructible_v<Type>) // if this is a struct / class with a custom destructor, call it
-		{
-			while (pHead <= pTail)
-			{
-				pHead->~Type();
-				++pHead;
-			}
-		}
-	}
+	void DeleteData(Type* pHead, Type* const pTail);
 
 	void Reallocate()
 	{
@@ -296,5 +279,18 @@ void CustomContainer<Type>::ReleaseMemory(Type*& pOldHead)
 	{
 		free(pOldHead);
 		pOldHead = nullptr;
+	}
+}
+
+template<typename Type>
+void CustomContainer<Type>::DeleteData(Type* pHead, Type* const pTail)
+{
+	if constexpr (!std::is_trivially_destructible_v<Type>) // if this is a struct / class with a custom destructor, call it
+	{
+		while (pHead <= pTail)
+		{
+			pHead->~Type();
+			++pHead;
+		}
 	}
 }
