@@ -191,7 +191,7 @@ CustomContainer<Type>::CustomContainer(const CustomContainer<Type>& other) noexc
 	for (size_t index{}; index < other.GetSize(); ++index)
 	{
 		CurrentElement = Head + index;
-		*CurrentElement = *(other.Head + index + 1);
+		*CurrentElement = *(other.Head + index);
 	}
 }
 
