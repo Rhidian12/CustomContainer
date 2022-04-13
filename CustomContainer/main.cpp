@@ -12,15 +12,24 @@
 
 TEST_CASE("Testing The Container")
 {
+	std::vector<int> test(std::vector<int>{});
 	CustomContainer<int> intContainer{};
 
 	REQUIRE(intContainer.IsEmpty());
 
-	for (int i{}; i <= 20; ++i)
+	intContainer.Add(0);
+	
+	REQUIRE(intContainer.Size() == 1);
+
+	intContainer.Clear();
+	REQUIRE(intContainer.Size() == 0);
+	REQUIRE(intContainer.IsEmpty());
+
+	for (int i{}; i < 20; ++i)
 		intContainer.Add(i);
 
 	REQUIRE(intContainer.Front() == 0);
-	REQUIRE(intContainer.Back() == 20);
+	REQUIRE(intContainer.Back() == 19);
 	REQUIRE(intContainer.Size() == 20);
 
 	intContainer[0] = 1;
@@ -33,16 +42,18 @@ TEST_CASE("Testing The Container")
 	REQUIRE(intContainer.IsEmpty());
 	REQUIRE(intContainer.Size() == 0);
 
-	for (int i{}; i <= 20; ++i)
+	for (int i{}; i < 20; ++i)
 		intContainer.Add(i);
+
+	REQUIRE(intContainer.Size() == 20);
 
 	CustomContainer<int> copyConstructor{ intContainer };
 
 	for (size_t i{}; i < copyConstructor.Size(); ++i)
 		REQUIRE(copyConstructor.At(i) == intContainer.At(i));
 
-	REQUIRE(intContainer.Back() == 20);
-	REQUIRE(copyConstructor.Back() == 20);
+	REQUIRE(intContainer.Back() == 19);
+	REQUIRE(copyConstructor.Back() == 19);
 
 	copyConstructor.Clear();
 	
@@ -52,23 +63,19 @@ TEST_CASE("Testing The Container")
 	CustomContainer<int> moveConstructor{ std::move(intContainer) };
 
 	REQUIRE(moveConstructor.Front() == 0);
-	REQUIRE(moveConstructor.Back() == 20);
-	REQUIRE(moveConstructor.Size() == 6);
-	REQUIRE(intContainer.IsEmpty());
-
-	REQUIRE_THROWS(intContainer.At(1));
+	REQUIRE(moveConstructor.Back() == 19);
+	REQUIRE(moveConstructor.Size() == 20);
 
 	CustomContainer<int> copyOperator = moveConstructor;
 
 	for (size_t i{}; i < copyOperator.Size(); ++i)
-		REQUIRE(copyOperator.At(i) == moveConstructor.At(i));
+		REQUIRE(copyOperator[i] == moveConstructor[i]);
 
 	CustomContainer<int> moveOperator = std::move(copyOperator);
 
-	REQUIRE(copyOperator.IsEmpty());
 	REQUIRE(moveOperator.Front() == 0);
-	REQUIRE(moveOperator.Back() == 20);
-	REQUIRE(moveOperator.Size() == 6);
+	REQUIRE(moveOperator.Back() == 19);
+	REQUIRE(moveOperator.Size() == 20);
 }
 
 #else

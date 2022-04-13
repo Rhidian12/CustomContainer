@@ -87,14 +87,7 @@ CustomContainer<Type>::CustomContainer(CustomContainer<Type>&& other) noexcept
 	, Tail{ std::move(other.Tail) }
 	, CurrentElement{ std::move(other.CurrentElement) }
 {
-	for (size_t index{}; index < other.Size(); ++index)
-	{
-		*(Head + index) = std::move(*(other.Head + index));
-	}
-
-	other.Clear();
-	other.ReleaseMemory(other.Head);
-
+	/* Don't release memory you're not reallocating fucking dumbass */
 	other.Head = nullptr;
 	other.Tail = nullptr;
 	other.CurrentElement = nullptr;
@@ -125,13 +118,7 @@ CustomContainer<Type>& CustomContainer<Type>::operator=(CustomContainer<Type>&& 
 	Tail = std::move(other.Tail);
 	CurrentElement = std::move(other.CurrentElement);
 
-	for (size_t index{}; index < other.Size(); ++index)
-	{
-		*(Head + index) = std::move(*(other.Head + index));
-	}
-
-	other.Clear();
-	other.ReleaseMemory(other.Head);
+	/* Don't release memory you're not reallocating fucking dumbass */
 
 	other.Head = nullptr;
 	other.Tail = nullptr;
@@ -158,7 +145,7 @@ void CustomContainer<Type>::Emplace(Values&&... val)
 {
 	Type* const pNextBlock{ CurrentElement != nullptr ? CurrentElement + 1 : Head };
 
-	if (!CurrentElement || pNextBlock >= Tail)
+	if (!pNextBlock || pNextBlock >= Tail)
 	{
 		ReallocateAndEmplace(std::forward<Values>(val)...);
 
@@ -185,7 +172,7 @@ void CustomContainer<Type>::Clear()
 template<typename Type>
 size_t CustomContainer<Type>::Size() const
 {
-	return CurrentElement != nullptr ? CurrentElement - Head : 0;
+	return CurrentElement != nullptr ? CurrentElement - Head + 1 : 0;
 }
 
 template<typename Type>
@@ -235,7 +222,7 @@ bool CustomContainer<Type>::IsEmpty() const
 template<typename Type>
 Type& CustomContainer<Type>::At(size_t index)
 {
-	ASSERT(((Head + index) > CurrentElement), "Container::At() > Index was out of range!");
+	ASSERT(((Head + index) < Tail), "Container::At() > Index was out of range!");
 
 	return *(Head + index);
 }
@@ -243,7 +230,7 @@ Type& CustomContainer<Type>::At(size_t index)
 template<typename Type>
 const Type& CustomContainer<Type>::At(size_t index) const
 {
-	ASSERT(((Head + index) > CurrentElement), "Container::At() > Index was out of range!");
+	ASSERT(((Head + index) < Tail), "Container::At() > Index was out of range!");
 
 	return *(Head + index);
 }
