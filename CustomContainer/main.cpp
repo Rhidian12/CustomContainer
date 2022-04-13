@@ -17,7 +17,7 @@ TEST_CASE("Testing The Container")
 	REQUIRE(intContainer.IsEmpty());
 
 	for (int i{}; i <= 20; i += 4)
-		intContainer.Push_back(i);
+		intContainer.Add(i);
 
 	REQUIRE(intContainer.GetFront() == 0);
 	REQUIRE(intContainer.GetBack() == 20);
@@ -34,7 +34,7 @@ TEST_CASE("Testing The Container")
 	REQUIRE(intContainer.GetSize() == 0);
 
 	for (int i{}; i <= 20; i += 4)
-		intContainer.Push_back(i);
+		intContainer.Add(i);
 
 	CustomContainer<int> copyConstructor{ intContainer };
 

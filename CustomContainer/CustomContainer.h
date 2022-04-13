@@ -44,24 +44,10 @@ public:
 		}
 	}
 
-	void Emplace(Type&& val);
+	template<typename ... Values>
+	void Emplace(Values&&... val);
 
-	void Clear() noexcept
-	{
-		if constexpr (!std::is_trivially_destructible_v<Type>) // if this is a struct / class with a custom destructor, call it
-		{
-			const size_t size{ CurrentElement - Head };
-			for (size_t index{ 1 }; index < size; ++index)
-			{
-				CurrentElement = Head + index; // adjust pointer
-
-				delete CurrentElement;
-				CurrentElement = nullptr;
-			}
-		}
-
-		CurrentElement = nullptr;
-	}
+	void Clear();
 
 	size_t GetSize() const noexcept
 	{
@@ -135,28 +121,45 @@ private:
 		}
 	}
 
+	void DeleteData(Type* pHead, Type* const pTail)
+	{
+		if constexpr (!std::is_trivially_destructible_v<Type>) // if this is a struct / class with a custom destructor, call it
+		{
+			while (pHead <= pTail)
+			{
+				pHead->~Type();
+				++pHead;
+			}
+		}
+	}
+
 	void Reallocate() noexcept
 	{
-		const size_t oldSize{ size_t(Tail - Head) }; // also oldCapacity
-		const size_t newCapacity{ oldSize + 5 };
+		ASSERT(CurrentElement >= Tail, "Container::Reallocate() > Reallocating while there is still memory left!");
 
-		Type* pOldHead{ Head };
+		const size_t oldCapacity{ size_t(Tail - Head) }; // also oldSize
+		const size_t newCapacity{ oldCapacity != 0 ? oldCapacity * 2 : 1 };
 
+		Type* const pOldHead{ Head };
+		Type* const pOldTail{ Tail };
+
+		/* [TODO]: Change calloc to malloc */
 		Head = static_cast<Type*>(calloc(newCapacity, SizeOfType));
 		Tail = Head + newCapacity;
 
-		for (size_t index{ 1 }; index < oldSize; ++index)
+		for (size_t index{}; index < oldCapacity; ++index)
 		{
 			CurrentElement = Head + index; // adjust pointer
-			*CurrentElement = *(pOldHead + index); // move element from old memory over
+			*CurrentElement = std::move(*(pOldHead + index)); // move element from old memory over
 		}
 
+		DeleteData(pOldHead, pOldTail);
 		ReleaseOldMemory(pOldHead);
 	}
 
-	Type* Head{ nullptr }; // does not contain data, only used as start of my memory block
-	Type* Tail{ nullptr }; // same thing, only used as end of my memory block
-	Type* CurrentElement{ nullptr }; // current element
+	Type* Head{ nullptr };
+	Type* Tail{ nullptr };
+	Type* CurrentElement{ nullptr };
 };
 
 template<typename Type>
@@ -241,12 +244,14 @@ void CustomContainer<Type>::Add(const Type& val)
 }
 
 template<typename Type>
-void CustomContainer<Type>::Emplace(Type&& val)
+template<typename ...Values>
+void CustomContainer<Type>::Emplace(Values&&... val)
 {
-	if (CurrentElement < Tail)
-	{
-		
-	}
 
-	
+}
+
+template<typename Type>
+void CustomContainer<Type>::Clear()
+{
+	DeleteData(Head, Tail);
 }
