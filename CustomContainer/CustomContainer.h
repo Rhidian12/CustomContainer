@@ -174,7 +174,7 @@ public:
 	Type& At(const size_t index)
 	{
 		if ((m_pHead + (index + 1)) > m_pCurrentElement)
-			return 0;
+			return *m_pHead;
 
 		return *(m_pHead + (index + 1));
 	}
@@ -182,7 +182,7 @@ public:
 	const Type& At(const size_t index) const
 	{
 		if ((m_pHead + (index + 1)) > m_pTail)
-			return 0;
+			return *m_pHead;
 
 		return *(m_pHead + (index + 1));
 	}
