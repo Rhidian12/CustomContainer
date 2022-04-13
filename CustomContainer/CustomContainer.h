@@ -10,7 +10,7 @@ public:
 
 	~CustomContainer()
 	{
-		ReleaseOldMemory(m_pHead);
+		ReleaseOldMemory(Head);
 	}
 
 	CustomContainer<Type>(const CustomContainer<Type>& other) noexcept;
@@ -20,49 +20,49 @@ public:
 
 	inline void Push_back(const Type& val) noexcept
 	{
-		if (!m_pCurrentElement) // first time a push_back happens
+		if (!CurrentElement) // first time a push_back happens
 		{
-			Type* pNextFreeBlock{ m_pHead + 1 };
+			Type* pNextFreeBlock{ Head + 1 };
 
-			m_pCurrentElement = pNextFreeBlock;
-			*m_pCurrentElement = val;
+			CurrentElement = pNextFreeBlock;
+			*CurrentElement = val;
 		}
 		else
 		{
 			// first check if we need to reallocate memory
-			Type* pNextFreeBlock{ m_pCurrentElement + 1 };
-			if (pNextFreeBlock >= m_pTail)
+			Type* pNextFreeBlock{ CurrentElement + 1 };
+			if (pNextFreeBlock >= Tail)
 			{
 				Reallocate(); // we need to reallocate
-				pNextFreeBlock = m_pCurrentElement + 1;
+				pNextFreeBlock = CurrentElement + 1;
 			}
 
-			m_pCurrentElement = pNextFreeBlock;
-			*m_pCurrentElement = val;
+			CurrentElement = pNextFreeBlock;
+			*CurrentElement = val;
 		}
 	}
 
 	inline void Push_back(Type&& val) noexcept
 	{
-		if (!m_pCurrentElement) // first time a push_back happens
+		if (!CurrentElement) // first time a push_back happens
 		{
-			Type* pNextFreeBlock{ m_pHead + 1 };
+			Type* pNextFreeBlock{ Head + 1 };
 
-			m_pCurrentElement = pNextFreeBlock;
-			*m_pCurrentElement = val;
+			CurrentElement = pNextFreeBlock;
+			*CurrentElement = val;
 		}
 		else
 		{
 			// first check if we need to reallocate memory
-			Type* pNextFreeBlock{ m_pCurrentElement + 1 };
-			if (pNextFreeBlock >= m_pTail)
+			Type* pNextFreeBlock{ CurrentElement + 1 };
+			if (pNextFreeBlock >= Tail)
 			{
 				Reallocate(); // we need to reallocate
-				pNextFreeBlock = m_pCurrentElement + 1;
+				pNextFreeBlock = CurrentElement + 1;
 			}
 
-			m_pCurrentElement = pNextFreeBlock;
-			*m_pCurrentElement = val;
+			CurrentElement = pNextFreeBlock;
+			*CurrentElement = val;
 		}
 	}
 
@@ -70,79 +70,79 @@ public:
 	{
 		if constexpr (!std::is_trivially_destructible_v<Type>) // if this is a struct / class with a custom destructor, call it
 		{
-			const size_t size{ m_pCurrentElement - m_pHead };
+			const size_t size{ CurrentElement - Head };
 			for (size_t index{ 1 }; index < size; ++index)
 			{
-				m_pCurrentElement = m_pHead + index; // adjust pointer
+				CurrentElement = Head + index; // adjust pointer
 
-				delete m_pCurrentElement;
-				m_pCurrentElement = nullptr;
+				delete CurrentElement;
+				CurrentElement = nullptr;
 			}
 		}
 
-		m_pCurrentElement = nullptr;
+		CurrentElement = nullptr;
 	}
 
 	size_t GetSize() const noexcept
 	{
-		if (!m_pCurrentElement)
+		if (!CurrentElement)
 			return 0;
 
-		return (m_pCurrentElement - m_pHead);
+		return (CurrentElement - Head);
 	}
 
 	size_t GetCapacity() const noexcept
 	{
-		return (m_pTail - m_pHead);
+		return (Tail - Head);
 	}
 
 	Type& GetFront() noexcept
 	{
-		return *(m_pHead + 1);
+		return *(Head + 1);
 	}
 
 	const Type& GetFront() const noexcept
 	{
-		return *(m_pHead + 1);
+		return *(Head + 1);
 	}
 
 	Type& GetBack() noexcept
 	{
-		return *m_pCurrentElement;
+		return *CurrentElement;
 	}
 
 	const Type& GetBack() const noexcept
 	{
-		return *m_pCurrentElement;
+		return *CurrentElement;
 	}
 
 	Type& At(const size_t index)
 	{
-		ASSERT(((m_pHead + (index + 1)) > m_pCurrentElement), "Container::At() > Index was out of range!");
+		ASSERT(((Head + (index + 1)) > CurrentElement), "Container::At() > Index was out of range!");
 
-		return *(m_pHead + (index + 1));
+		return *(Head + (index + 1));
 	}
 
 	const Type& At(const size_t index) const
 	{
-		ASSERT(((m_pHead + (index + 1)) > m_pTail), "Container::At() > Index was out of range!");
+		ASSERT(((Head + (index + 1)) > Tail), "Container::At() > Index was out of range!");
 
-		return *(m_pHead + (index + 1));
+		return *(Head + (index + 1));
 	}
 
 	const bool IsEmpty() const noexcept
 	{
-		return m_pCurrentElement == nullptr;
+		return CurrentElement == nullptr;
 	}
 
 	Type& operator[](const size_t index) noexcept
 	{
-		return *(m_pHead + (index + 1));
+		return *(Head + (index + 1));
 	}
 
 	const Type& operator[](const size_t index) const noexcept
 	{
-		return *(m_pHead + (index + 1));
+		return *(Head + (index + 1));
 	}
 
 private:
@@ -157,26 +157,26 @@ private:
 
 	void Reallocate() noexcept
 	{
-		const size_t oldSize{ size_t(m_pTail - m_pHead) }; // also oldCapacity
+		const size_t oldSize{ size_t(Tail - Head) }; // also oldCapacity
 		const size_t newCapacity{ oldSize + 5 };
 
-		Type* pOldHead{ m_pHead };
+		Type* pOldHead{ Head };
 
-		m_pHead = static_cast<Type*>(calloc(newCapacity, SizeOfType));
-		m_pTail = m_pHead + newCapacity;
+		Head = static_cast<Type*>(calloc(newCapacity, SizeOfType));
+		Tail = Head + newCapacity;
 
 		for (size_t index{ 1 }; index < oldSize; ++index)
 		{
-			m_pCurrentElement = m_pHead + index; // adjust pointer
-			*m_pCurrentElement = *(pOldHead + index); // move element from old memory over
+			CurrentElement = Head + index; // adjust pointer
+			*CurrentElement = *(pOldHead + index); // move element from old memory over
 		}
 
 		ReleaseOldMemory(pOldHead);
 	}
 
-	Type* m_pHead{ nullptr }; // does not contain data, only used as start of my memory block
-	Type* m_pTail{ nullptr }; // same thing, only used as end of my memory block
-	Type* m_pCurrentElement{ nullptr }; // current element
+	Type* Head{ nullptr }; // does not contain data, only used as start of my memory block
+	Type* Tail{ nullptr }; // same thing, only used as end of my memory block
+	Type* CurrentElement{ nullptr }; // current element
 };
 
 template<typename Type>
@@ -185,13 +185,13 @@ CustomContainer<Type>::CustomContainer(const CustomContainer<Type>& other) noexc
 	const size_t capacity{ other.GetCapacity() };
 
 	/* [TODO]: Change calloc to malloc */
-	m_pHead = static_cast<Type*>(calloc(capacity, SizeOfType));
-	m_pTail = m_pHead + capacity;
+	Head = static_cast<Type*>(calloc(capacity, SizeOfType));
+	Tail = Head + capacity;
 
 	for (size_t index{}; index < other.GetSize(); ++index)
 	{
-		m_pCurrentElement = m_pHead + index;
-		*m_pCurrentElement = *(other.m_pHead + index + 1);
+		CurrentElement = Head + index;
+		*CurrentElement = *(other.Head + index + 1);
 	}
 }
 
@@ -200,17 +200,17 @@ CustomContainer<Type>::CustomContainer(CustomContainer<Type>&& other) noexcept
 {
 	const size_t capacity{ other.GetCapacity() }; // this could be any start value
 	/* [TODO]: Change calloc to malloc */
-	m_pHead = static_cast<Type*>(calloc(capacity, SizeOfType)); // maybe make m_pHead actually useful instead of storing memory?
-	m_pTail = m_pHead + capacity;
+	Head = static_cast<Type*>(calloc(capacity, SizeOfType)); // maybe make m_pHead actually useful instead of storing memory?
+	Tail = Head + capacity;
 
 	for (size_t index{  }; index < other.GetSize(); ++index)
 	{
-		m_pCurrentElement = m_pHead + index + 1;
-		*m_pCurrentElement = other.At(index);
+		CurrentElement = Head + index + 1;
+		*CurrentElement = other.At(index);
 	}
 
 	other.Clear();
-	other.ReleaseOldMemory(other.m_pHead);
+	other.ReleaseOldMemory(other.Head);
 }
 
 template<typename Type>
@@ -218,13 +218,13 @@ CustomContainer<Type>& CustomContainer<Type>::operator=(const CustomContainer<Ty
 {
 	const size_t capacity{ other.GetCapacity() }; // this could be any start value
 	/* [TODO]: Change calloc to malloc */
-	m_pHead = static_cast<Type*>(calloc(capacity, SizeOfType)); // maybe make m_pHead actually useful instead of storing memory?
-	m_pTail = m_pHead + capacity;
+	Head = static_cast<Type*>(calloc(capacity, SizeOfType)); // maybe make m_pHead actually useful instead of storing memory?
+	Tail = Head + capacity;
 
 	for (size_t index{  }; index < other.GetSize(); ++index)
 	{
-		m_pCurrentElement = m_pHead + index + 1;
-		*m_pCurrentElement = other.At(index);
+		CurrentElement = Head + index + 1;
+		*CurrentElement = other.At(index);
 	}
 }
 
@@ -233,15 +233,15 @@ CustomContainer<Type>& CustomContainer<Type>::operator=(CustomContainer<Type>&& 
 {
 	const size_t capacity{ other.GetCapacity() }; // this could be any start value
 	/* [TODO]: Change calloc to malloc */
-	m_pHead = static_cast<Type*>(calloc(capacity, SizeOfType)); // maybe make m_pHead actually useful instead of storing memory?
-	m_pTail = m_pHead + capacity;
+	Head = static_cast<Type*>(calloc(capacity, SizeOfType)); // maybe make m_pHead actually useful instead of storing memory?
+	Tail = Head + capacity;
 
 	for (size_t index{  }; index < other.GetSize(); ++index)
 	{
-		m_pCurrentElement = m_pHead + index + 1;
-		*m_pCurrentElement = other.At(index);
+		CurrentElement = Head + index + 1;
+		*CurrentElement = other.At(index);
 	}
 
 	other.Clear();
-	other.ReleaseOldMemory(other.m_pHead);
+	other.ReleaseOldMemory(other.Head);
 }
