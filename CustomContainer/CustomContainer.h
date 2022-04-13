@@ -32,6 +32,8 @@ public:
 
 	void Reserve(size_t newCapacity);
 
+	void Resize(size_t newSize);
+
 	void ShrinkToFit();
 
 	Type& Front();
@@ -60,6 +62,9 @@ private:
 
 	template<typename ... Values>
 	void ReallocateAndEmplace(Values&&... values);
+
+	void ResizeToBigger(size_t newSize);
+	void ResizeToSmaller(size_t newSize);
 
 	Type* Head{ nullptr };
 	Type* Tail{ nullptr };
@@ -154,8 +159,6 @@ void CustomContainer<Type>::Emplace(Values&&... val)
 	if (!pNextBlock || pNextBlock >= Tail)
 	{
 		ReallocateAndEmplace(std::forward<Values>(val)...);
-
-		// CurrentElement = Head;
 	}
 	else
 	{
@@ -194,6 +197,19 @@ void CustomContainer<Type>::Reserve(size_t newCapacity)
 		return;
 
 	Reallocate(newCapacity);
+}
+
+template<typename Type>
+void CustomContainer<Type>::Resize(size_t newSize)
+{
+	if (newSize > Size())
+	{
+		ResizeToBigger(newSize);
+	}
+	else if (newSize < Size())
+	{
+		ResizeToSmaller(newSize);
+	}
 }
 
 template<typename Type>
@@ -344,6 +360,30 @@ void CustomContainer<Type>::Reallocate(size_t newCapacity)
 
 	DeleteData(pOldHead, pOldTail);
 	ReleaseMemory(pOldHead);
+}
+
+template<typename Type>
+void CustomContainer<Type>::ResizeToBigger(size_t newSize)
+{
+	static_assert(std::is_trivially_constructible_v<Type>, "Container::Resize() > Type is not default constructable!");
+
+	const size_t sizeDifference{ newSize - Size() };
+
+	for (size_t i{}; i < sizeDifference; ++i)
+	{
+		Emplace(Type{});
+	}
+}
+
+template<typename Type>
+void CustomContainer<Type>::ResizeToSmaller(size_t newSize)
+{
+	const size_t sizeDifference{ Size() - newSize };
+
+	for (size_t i{}; i < sizeDifference; ++i)
+	{
+		/* [TODO]: Add pop_back */
+	}
 }
 
 template<typename Type>
