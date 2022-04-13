@@ -235,17 +235,21 @@ CustomContainer<Type>& CustomContainer<Type>::operator=(const CustomContainer<Ty
 template<typename Type>
 CustomContainer<Type>& CustomContainer<Type>::operator=(CustomContainer<Type>&& other) noexcept
 {
-	const size_t capacity{ other.GetCapacity() }; // this could be any start value
-	/* [TODO]: Change calloc to malloc */
-	Head = static_cast<Type*>(calloc(capacity, SizeOfType)); // maybe make m_pHead actually useful instead of storing memory?
-	Tail = Head + capacity;
+	Head = std::move(other.Head);
+	Tail = std::move(other.Tail);
+	CurrentElement = std::move(other.CurrentElement);
 
-	for (size_t index{  }; index < other.GetSize(); ++index)
+	for (size_t index{}; index < other.GetSize(); ++index)
 	{
-		CurrentElement = Head + index + 1;
-		*CurrentElement = other.At(index);
+		*(Head + index) = std::move(*(other.Head + index));
 	}
 
 	other.Clear();
 	other.ReleaseOldMemory(other.Head);
+
+	other.Head = nullptr;
+	other.Tail = nullptr;
+	other.CurrentElement = nullptr;
+
+	return *this;
 }
