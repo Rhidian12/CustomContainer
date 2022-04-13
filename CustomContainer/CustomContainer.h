@@ -19,30 +19,7 @@ public:
 	CustomContainer<Type>& operator=(const CustomContainer<Type>& other) noexcept;
 	CustomContainer<Type>& operator=(CustomContainer<Type>&& other) noexcept;
 
-	inline void Push_back(const Type& val) noexcept
-	{
-		if (!CurrentElement) // first time a push_back happens
-		{
-			Type* pNextFreeBlock{ Head + 1 };
-
-			CurrentElement = pNextFreeBlock;
-			*CurrentElement = val;
-		}
-		else
-		{
-			// first check if we need to reallocate memory
-			Type* pNextFreeBlock{ CurrentElement + 1 };
-			if (pNextFreeBlock >= Tail)
-			{
-				Reallocate(); // we need to reallocate
-				pNextFreeBlock = CurrentElement + 1;
-			}
-
-			CurrentElement = pNextFreeBlock;
-			*CurrentElement = val;
-		}
-	}
-
+	void Add(const Type& val);
 	inline void Push_back(Type&& val) noexcept
 	{
 		if (!CurrentElement) // first time a push_back happens
@@ -66,6 +43,8 @@ public:
 			*CurrentElement = val;
 		}
 	}
+
+	void Emplace(Type&& val);
 
 	void Clear() noexcept
 	{
@@ -253,4 +232,21 @@ CustomContainer<Type>& CustomContainer<Type>::operator=(CustomContainer<Type>&& 
 	other.CurrentElement = nullptr;
 
 	return *this;
+}
+
+template<typename Type>
+void CustomContainer<Type>::Add(const Type& val)
+{
+	Emplace(val);
+}
+
+template<typename Type>
+void CustomContainer<Type>::Emplace(Type&& val)
+{
+	if (CurrentElement < Tail)
+	{
+		
+	}
+
+	
 }
