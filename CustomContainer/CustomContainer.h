@@ -50,6 +50,9 @@ private:
 
 	void Reallocate();
 
+	template<typename ... Values>
+	void ReallocateAndEmplace(Values&&... values);
+
 	Type* Head{ nullptr };
 	Type* Tail{ nullptr };
 	Type* CurrentElement{ nullptr };
@@ -153,21 +156,17 @@ template<typename Type>
 template<typename ...Values>
 void CustomContainer<Type>::Emplace(Values&&... val)
 {
-	if (!CurrentElement || CurrentElement > Tail)
+	if (!CurrentElement || CurrentElement >= Tail)
 	{
-		Reallocate();
-
-		/* Safety check, after the first allocation, this will still be 0 */
-		if (!CurrentElement)
-		{
-			CurrentElement = Head + 1;
-		}
+		ReallocateAndEmplace(std::forward<Values>(val)...);
 	}
-
-	/* [TODO]: AN ALLOCATOR SHOULD DO THIS */
-	// CurrentElement = new Type(std::forward<Values>(val)...);
-	*CurrentElement = Type(std::forward<Values>(val)...);
-	++CurrentElement;
+	else
+	{
+		/* [TODO]: AN ALLOCATOR SHOULD DO THIS */
+		// CurrentElement = new Type(std::forward<Values>(val)...);
+		*CurrentElement = Type(std::forward<Values>(val)...);
+		++CurrentElement;
+	}
 }
 
 template<typename Type>
@@ -298,6 +297,29 @@ void CustomContainer<Type>::Reallocate()
 		*CurrentElement = std::move(*(pOldHead + index)); // move element from old memory over
 	}
 
+	/* If this is the not the first allocation, move CurrentElement to the next free block */
+	if (CurrentElement)
+	{
+		++CurrentElement;
+	}
+	/* The first allocation in memory will not set CurrentElement itself */
+	else
+	{
+		CurrentElement = Head;
+	}
+
 	DeleteData(pOldHead, pOldTail);
 	ReleaseMemory(pOldHead);
+}
+
+template<typename Type>
+template<typename ...Values>
+void CustomContainer<Type>::ReallocateAndEmplace(Values && ...values)
+{
+	Reallocate();
+
+	/* [TODO]: AN ALLOCATOR SHOULD DO THIS */
+	// CurrentElement = new Type(std::forward<Values>(val)...);
+	*CurrentElement = Type(std::forward<Values>(values)...);
+	++CurrentElement;
 }
