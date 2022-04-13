@@ -4,8 +4,9 @@
 #include <vector> // std::vector
 #include <fstream> // std::ofstream
 #include <algorithm> // std::max_element, std::min_element, std::remove_if
+#include <deque> /* std::deque */
 
-#define UNIT_TESTS
+//#define UNIT_TESTS
 #ifdef UNIT_TESTS
 #define CATCH_CONFIG_MAIN
 #include "catch.hpp"
@@ -107,120 +108,63 @@ TEST_CASE("Testing The Container")
 #else
 int main(int argc, char* argv[])
 {
-	using Timepoint = std::chrono::high_resolution_clock::time_point;
+	using Timepoint = std::chrono::steady_clock::time_point;
 
-	std::ofstream file{};
-	file.open("BenchmarksDebugX64.txt");
-	//file.open("BenchmarksReleaseX64.txt");
+	// std::ofstream file{};
+	// file.open("BenchmarksDebugX64.txt");
+	// file.open("BenchmarksReleaseX64.txt");
 
 	const int amountOfIterations{ 100 };
-	const int amountOfPushbacks{ 50 };
+	const int amountOfPushbacks{ 500 };
 
 	std::cout << "Amount of Iterations: " << amountOfIterations << std::endl;
 	std::cout << "Amount of push_back: " << amountOfPushbacks << std::endl;
-	file << "Amount of push_back: " << amountOfPushbacks << std::endl;
+	// file << "Amount of push_back: " << amountOfPushbacks << std::endl;
+
+	std::deque<long long> stlTimes{};
+	std::deque<long long> customTimes{};
+
+	Timepoint t1{};
+	Timepoint t2{};
 
 	for (int i{}; i < amountOfIterations; ++i)
 	{
-		{
-			std::vector<long long> times{};
-			for (int j{}; j < amountOfIterations; ++j)
-			{
-				const Timepoint t1{ std::chrono::high_resolution_clock::now() };
+		t1 = std::chrono::high_resolution_clock::now();
 
-				std::vector<int> vector{};
+		std::vector<int> vector{};
 
-				for (int k{}; k < amountOfPushbacks * i; ++k)
-					vector.push_back(k);
+		for (int k{}; k < amountOfPushbacks; ++k)
+			vector.push_back(k);
 
-				const Timepoint t2{ std::chrono::high_resolution_clock::now() };
+		t2 = std::chrono::high_resolution_clock::now();
 
-				const long long time = std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count();
-				times.push_back(time);
-			}
-			bool hasValueBeenErased{};
-			const long long minElement{ *(std::min_element(times.cbegin(), times.cend())) };
-			times.erase(std::remove_if(times.begin(), times.end(), [&hasValueBeenErased, minElement](const long long a)->bool
-				{
-					if (!hasValueBeenErased)
-					{
-						if (minElement == a)
-						{
-							hasValueBeenErased = true;
-							return true;
-						}
-					}
-					return false;
-				}), times.end());
+		stlTimes.push_back(std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count());
 
-			hasValueBeenErased = true;
-			const long long maxElement{ *(std::max_element(times.cbegin(), times.cend())) };
-			times.erase(std::remove_if(times.begin(), times.end(), [&hasValueBeenErased, maxElement](const long long a)->bool
-				{
-					if (!hasValueBeenErased)
-					{
-						if (maxElement == a)
-						{
-							hasValueBeenErased = true;
-							return true;
-						}
-					}
-					return false;
-				}), times.end());
+		t1 = std::chrono::high_resolution_clock::now();
 
-			file << i << " " << "STL: " << std::fixed << std::accumulate(times.cbegin(), times.cend(), 0.f) / times.size() << std::endl;
-		}
-		{
-			std::vector<long long> times{};
-			for (int j{}; j < amountOfIterations; ++j)
-			{
-				const Timepoint t1{ std::chrono::high_resolution_clock::now() };
+		CustomContainer<int> container{};
 
-				CustomContainer<int> custom{};
+		for (int k{}; k < amountOfPushbacks; ++k)
+			container.Add(k);
 
-				for (int k{}; k < amountOfPushbacks * i; ++k)
-					custom.Push_back(k);
+		t2 = std::chrono::high_resolution_clock::now();
 
-				const Timepoint t2{ std::chrono::high_resolution_clock::now() };
-
-				const long long time = std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count();
-				times.push_back(time);
-			}
-			bool hasValueBeenErased{};
-			const long long minElement{ *(std::min_element(times.cbegin(), times.cend())) };
-			times.erase(std::remove_if(times.begin(), times.end(), [&hasValueBeenErased, minElement](const long long a)->bool
-				{
-					if (!hasValueBeenErased)
-					{
-						if (minElement == a)
-						{
-							hasValueBeenErased = true;
-							return true;
-						}
-					}
-					return false;
-				}), times.end());
-
-			hasValueBeenErased = true;
-			const long long maxElement{ *(std::max_element(times.cbegin(), times.cend())) };
-			times.erase(std::remove_if(times.begin(), times.end(), [&hasValueBeenErased, maxElement](const long long a)->bool
-				{
-					if (!hasValueBeenErased)
-					{
-						if (maxElement == a)
-						{
-							hasValueBeenErased = true;
-							return true;
-						}
-					}
-					return false;
-				}), times.end());
-
-			file << i << " " << "CUSTOM: " << std::fixed << std::accumulate(times.cbegin(), times.cend(), 0.f) / times.size() << std::endl;
-		}
+		customTimes.push_back(std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count());
 	}
 
-	file.close();
+	for (int j{}; j < amountOfIterations / 10; ++j)
+	{
+		stlTimes.pop_back();
+		stlTimes.pop_front();
+
+		customTimes.pop_back();
+		customTimes.pop_front();
+	}
+
+	std::cout << "STL Time Average (in nanoseconds): " << std::accumulate(stlTimes.cbegin(), stlTimes.cend(), (long long)0) / stlTimes.size() << "\n";
+	std::cout << "Custom Time Average (in nanoseconds): " << std::accumulate(customTimes.cbegin(), customTimes.cend(), (long long)0) / customTimes.size() << "\n";
+
+	// file.close();
 
 	return 0;
 }
