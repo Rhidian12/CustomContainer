@@ -100,6 +100,7 @@ private:
 };
 
 /* [TODO]: Make Allocator */
+/* [TODO]: Make Insert() and Emplace_At() */
 template<typename Type>
 class CustomContainer final
 {
