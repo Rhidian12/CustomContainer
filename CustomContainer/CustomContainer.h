@@ -2,98 +2,102 @@
 #include "Utils.h"
 
 template<typename Type>
-class Iterator final
+class RandomIterator final
 {
 public:
 	using difference_type = std::ptrdiff_t;
 
-	Iterator(Type* const pPointer)
+	RandomIterator(Type* const pPointer)
 		: Pointer{ pPointer }
 	{}
 
 	/* Default rule of 5 is good enough */
-	Iterator(const Iterator&) noexcept = default;
-	Iterator(Iterator&&) noexcept = default;
-	Iterator& operator=(const Iterator&) noexcept = default;
-	Iterator& operator=(Iterator&&) noexcept = default;
+	RandomIterator(const RandomIterator&) noexcept = default;
+	RandomIterator(RandomIterator&&) noexcept = default;
+	RandomIterator& operator=(const RandomIterator&) noexcept = default;
+	RandomIterator& operator=(RandomIterator&&) noexcept = default;
 
-	Iterator& operator+=(difference_type diff) { Pointer += diff; return *this; }
-	Iterator& operator-=(difference_type diff) { Pointer -= diff; return *this; }
+	RandomIterator& operator+=(difference_type diff) { Pointer += diff; return *this; }
+	RandomIterator& operator-=(difference_type diff) { Pointer -= diff; return *this; }
 
 	Type& operator*() const { return *Pointer; }
 	Type* operator->() const { return Pointer; }
 	Type& operator[](difference_type diff) const { return Pointer[diff]; }
 
-	Iterator& operator++() { ++Pointer; return *this; }
-	Iterator& operator--() { --Pointer; return *this; }
-	Iterator& operator++(int) { Iterator temp(*this); ++Pointer; return temp; }
-	Iterator& operator--(int) { Iterator temp(*this); --Pointer; return temp; }
+	const Type& operator*() const { return *Pointer; }
+	const Type* operator->() const { return Pointer; }
+	const Type& operator[](difference_type diff) const { return Pointer[diff]; }
 
-	difference_type operator-(const Iterator& other) const { return Pointer - other.Pointer; }
+	RandomIterator& operator++() { ++Pointer; return *this; }
+	RandomIterator& operator--() { --Pointer; return *this; }
+	RandomIterator& operator++(int) { RandomIterator temp(*this); ++Pointer; return temp; }
+	RandomIterator& operator--(int) { RandomIterator temp(*this); --Pointer; return temp; }
 
-	Iterator operator+(difference_type diff) const { return Iterator(Pointer + diff); }
-	Iterator operator-(difference_type diff) const { return Iterator(Pointer - diff); }
+	difference_type operator-(const RandomIterator& other) const { return Pointer - other.Pointer; }
 
-	friend Iterator operator+(difference_type diff, const Iterator& it) { return Iterator(diff + it.Pointer); }
-	friend Iterator operator-(difference_type diff, const Iterator& it) { return Iterator(diff - it.Pointer); }
+	RandomIterator operator+(difference_type diff) const { return RandomIterator(Pointer + diff); }
+	RandomIterator operator-(difference_type diff) const { return RandomIterator(Pointer - diff); }
 
-	bool operator==(const Iterator& it) const { return Pointer == it.Pointer; };
-	bool operator!=(const Iterator& it) const { return Pointer != it.Pointer; };
+	friend RandomIterator operator+(difference_type diff, const RandomIterator& it) { return RandomIterator(diff + it.Pointer); }
+	friend RandomIterator operator-(difference_type diff, const RandomIterator& it) { return RandomIterator(diff - it.Pointer); }
 
-	bool operator>(const Iterator& it) const { return Pointer > it.Pointer; };
-	bool operator<(const Iterator& it) const { return Pointer < it.Pointer; };
+	bool operator==(const RandomIterator& it) const { return Pointer == it.Pointer; };
+	bool operator!=(const RandomIterator& it) const { return Pointer != it.Pointer; };
 
-	bool operator>=(const Iterator& it) const { return Pointer >= it.Pointer; };
-	bool operator<=(const Iterator& it) const { return Pointer <= it.Pointer; };
+	bool operator>(const RandomIterator& it) const { return Pointer > it.Pointer; };
+	bool operator<(const RandomIterator& it) const { return Pointer < it.Pointer; };
+
+	bool operator>=(const RandomIterator& it) const { return Pointer >= it.Pointer; };
+	bool operator<=(const RandomIterator& it) const { return Pointer <= it.Pointer; };
 
 private:
 	Type* Pointer{ nullptr };
 };
 
 template<typename Type>
-class ConstIterator final
+class RandomConstIterator final
 {
 public:
 	using difference_type = std::ptrdiff_t;
 
-	ConstIterator(Type* const pPointer)
+	RandomConstIterator(Type* const pPointer)
 		: Pointer{ pPointer }
 	{}
 
 	/* Default rule of 5 is good enough */
-	ConstIterator(const ConstIterator&) noexcept = default;
-	ConstIterator(ConstIterator&&) noexcept = default;
-	ConstIterator& operator=(const ConstIterator&) noexcept = default;
-	ConstIterator& operator=(ConstIterator&&) noexcept = default;
+	RandomConstIterator(const RandomConstIterator&) noexcept = default;
+	RandomConstIterator(RandomConstIterator&&) noexcept = default;
+	RandomConstIterator& operator=(const RandomConstIterator&) noexcept = default;
+	RandomConstIterator& operator=(RandomConstIterator&&) noexcept = default;
 
-	ConstIterator& operator+=(difference_type diff) { Pointer += diff; return *this; }
-	ConstIterator& operator-=(difference_type diff) { Pointer -= diff; return *this; }
+	RandomConstIterator& operator+=(difference_type diff) { Pointer += diff; return *this; }
+	RandomConstIterator& operator-=(difference_type diff) { Pointer -= diff; return *this; }
 
 	const Type& operator*() const { return *Pointer; }
 	const Type* operator->() const { return Pointer; }
 	const Type& operator[](difference_type diff) const { return Pointer[diff]; }
 
-	ConstIterator& operator++() { ++Pointer; return *this; }
-	ConstIterator& operator--() { --Pointer; return *this; }
-	ConstIterator& operator++(int) { ConstIterator temp(*this); ++Pointer; return temp; }
-	ConstIterator& operator--(int) { ConstIterator temp(*this); --Pointer; return temp; }
+	RandomConstIterator& operator++() { ++Pointer; return *this; }
+	RandomConstIterator& operator--() { --Pointer; return *this; }
+	RandomConstIterator& operator++(int) { RandomConstIterator temp(*this); ++Pointer; return temp; }
+	RandomConstIterator& operator--(int) { RandomConstIterator temp(*this); --Pointer; return temp; }
 
-	difference_type operator-(const ConstIterator& other) const { return Pointer - other.Pointer; }
+	difference_type operator-(const RandomConstIterator& other) const { return Pointer - other.Pointer; }
 
-	ConstIterator operator+(difference_type diff) const { return ConstIterator(Pointer + diff); }
-	ConstIterator operator-(difference_type diff) const { return ConstIterator(Pointer - diff); }
+	RandomConstIterator operator+(difference_type diff) const { return RandomConstIterator(Pointer + diff); }
+	RandomConstIterator operator-(difference_type diff) const { return RandomConstIterator(Pointer - diff); }
 
-	friend ConstIterator operator+(difference_type diff, const ConstIterator& it) { return ConstIterator(diff + it.Pointer); }
-	friend ConstIterator operator-(difference_type diff, const ConstIterator& it) { return ConstIterator(diff - it.Pointer); }
+	friend RandomConstIterator operator+(difference_type diff, const RandomConstIterator& it) { return RandomConstIterator(diff + it.Pointer); }
+	friend RandomConstIterator operator-(difference_type diff, const RandomConstIterator& it) { return RandomConstIterator(diff - it.Pointer); }
 
-	bool operator==(const ConstIterator& it) const { return Pointer == it.Pointer; };
-	bool operator!=(const ConstIterator& it) const { return Pointer != it.Pointer; };
+	bool operator==(const RandomConstIterator& it) const { return Pointer == it.Pointer; };
+	bool operator!=(const RandomConstIterator& it) const { return Pointer != it.Pointer; };
 
-	bool operator>(const ConstIterator& it) const { return Pointer > it.Pointer; };
-	bool operator<(const ConstIterator& it) const { return Pointer < it.Pointer; };
+	bool operator>(const RandomConstIterator& it) const { return Pointer > it.Pointer; };
+	bool operator<(const RandomConstIterator& it) const { return Pointer < it.Pointer; };
 
-	bool operator>=(const ConstIterator& it) const { return Pointer >= it.Pointer; };
-	bool operator<=(const ConstIterator& it) const { return Pointer <= it.Pointer; };
+	bool operator>=(const RandomConstIterator& it) const { return Pointer >= it.Pointer; };
+	bool operator<=(const RandomConstIterator& it) const { return Pointer <= it.Pointer; };
 
 private:
 	Type* Pointer{ nullptr };
