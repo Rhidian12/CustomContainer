@@ -324,14 +324,14 @@ public:
 		return Head;
 	}
 
-	Iterator<Type> begin() noexcept { return Iterator(Head); }
-	ConstIterator<Type> begin() const noexcept { return ConstIterator(Head); }
+	RandomIterator<Type> begin() noexcept { return RandomIterator(Head); }
+	RandomConstIterator<Type> begin() const noexcept { return RandomConstIterator(Head); }
 
-	Iterator<Type> end() noexcept { return Iterator(Tail); }
-	ConstIterator<Type> end() const noexcept { return ConstIterator(Tail); }
+	RandomIterator<Type> end() noexcept { return RandomIterator(Tail); }
+	RandomConstIterator<Type> end() const noexcept { return RandomConstIterator(Tail); }
 
-	ConstIterator<Type> cbegin() const noexcept { return ConstIterator(Head); }
-	ConstIterator<Type> cend() const noexcept { return ConstIterator(Tail); }
+	RandomConstIterator<Type> cbegin() const noexcept { return RandomConstIterator(Head); }
+	RandomConstIterator<Type> cend() const noexcept { return RandomConstIterator(Tail); }
 
 private:
 	void ReleaseMemory(Type*& pOldHead)
