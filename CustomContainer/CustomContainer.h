@@ -91,7 +91,7 @@ CustomContainer<Type>::CustomContainer(const CustomContainer<Type>& other) noexc
 	for (size_t index{}; index < other.Size(); ++index)
 	{
 		CurrentElement = Head + index;
-		*CurrentElement = *(other.Head + index);
+		new (CurrentElement) Type(*(other.Head + index));
 	}
 }
 
@@ -118,7 +118,7 @@ CustomContainer<Type>& CustomContainer<Type>::operator=(const CustomContainer<Ty
 	for (size_t index{}; index < other.Size(); ++index)
 	{
 		CurrentElement = Head + index;
-		*CurrentElement = *(other.Head + index);
+		new (CurrentElement) Type(*(other.Head + index));
 	}
 
 	return *this;
