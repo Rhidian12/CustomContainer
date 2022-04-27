@@ -10,7 +10,6 @@ class CustomContainer final
 
 public:
 	CustomContainer() = default;
-
 	~CustomContainer()
 	{
 		DeleteData(Head, Tail);
