@@ -13,10 +13,10 @@ public:
 	~CustomContainer();
 
 	/* If these aren't marked as noexcept, VS keeps complaining */
-	CustomContainer<Type>(const CustomContainer<Type>& other) noexcept;
-	CustomContainer<Type>(CustomContainer<Type>&& other) noexcept;
-	CustomContainer<Type>& operator=(const CustomContainer<Type>& other) noexcept;
-	CustomContainer<Type>& operator=(CustomContainer<Type>&& other) noexcept;
+	CustomContainer(const CustomContainer& other) noexcept;
+	CustomContainer(CustomContainer&& other) noexcept;
+	CustomContainer<Type>& operator=(const CustomContainer& other) noexcept;
+	CustomContainer<Type>& operator=(CustomContainer&& other) noexcept;
 
 	void Add(const Type& val);
 	void Add(Type&& val);
@@ -340,9 +340,6 @@ void CustomContainer<Type>::DeleteData(Type* pHead, Type* const pTail)
 template<typename Type>
 void CustomContainer<Type>::Reallocate()
 {
-	if (CurrentElement)
-		ASSERT(((CurrentElement + 1) >= Tail), "Container::Reallocate() > Reallocating while there is still memory left!");
-
 	const size_t oldCapacity{ size_t(Tail - Head) }; // also oldSize
 	const size_t newCapacity{ oldCapacity != 0 ? oldCapacity * 2 : 1 };
 
