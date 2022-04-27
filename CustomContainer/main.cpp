@@ -6,7 +6,7 @@
 #include <algorithm> // std::max_element, std::min_element, std::remove_if
 #include <deque> /* std::deque */
 
-//#define UNIT_TESTS
+#define UNIT_TESTS
 #ifdef UNIT_TESTS
 #define CATCH_CONFIG_MAIN
 #include "catch.hpp"
@@ -103,6 +103,28 @@ TEST_CASE("Testing The Container")
 
 	moveOperator.Resize(10);
 	REQUIRE(moveOperator.Size() == 10);
+
+	for (int& i : moveOperator)
+	{
+		i += 5;
+	}
+
+	REQUIRE(moveOperator.Size() == 10);
+	REQUIRE(moveOperator[0] == 5);
+	REQUIRE(moveOperator.Front() == 5);
+	REQUIRE(moveOperator.At(0) == 5);
+
+	for (const int& i : moveOperator)
+	{
+		/* Will never fire, this for-loop should just compile */
+		if (i == -1)
+		{
+			std::cout << "UwU\n";
+		}
+	}
+
+	REQUIRE(*moveOperator.cbegin() == moveOperator.Front());
+	REQUIRE(*moveOperator.begin() == moveOperator.Front());
 }
 
 #else
