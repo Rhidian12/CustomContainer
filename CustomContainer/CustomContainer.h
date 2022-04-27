@@ -7,6 +7,7 @@ template<typename Type>
 class CustomContainer final
 {
 	inline static constexpr size_t SizeOfType = sizeof(Type);
+
 public:
 	CustomContainer() = default;
 
@@ -70,7 +71,7 @@ private:
 
 	Type* Head{ nullptr };
 	Type* Tail{ nullptr };
-	Type* CurrentElement{ nullptr };
+	Type* LastElement{ nullptr };
 };
 
 template<typename Type>
@@ -90,8 +91,8 @@ CustomContainer<Type>::CustomContainer(const CustomContainer<Type>& other) noexc
 
 	for (size_t index{}; index < other.Size(); ++index)
 	{
-		CurrentElement = Head + index;
-		new (CurrentElement) Type(*(other.Head + index));
+		LastElement = Head + index;
+		new (LastElement) Type(*(other.Head + index));
 	}
 }
 
@@ -99,12 +100,12 @@ template<typename Type>
 CustomContainer<Type>::CustomContainer(CustomContainer<Type>&& other) noexcept
 	: Head{ std::move(other.Head) }
 	, Tail{ std::move(other.Tail) }
-	, CurrentElement{ std::move(other.CurrentElement) }
+	, LastElement{ std::move(other.LastElement) }
 {
 	/* Don't release memory you're not reallocating fucking dumbass */
 	other.Head = nullptr;
 	other.Tail = nullptr;
-	other.CurrentElement = nullptr;
+	other.LastElement = nullptr;
 }
 
 template<typename Type>
@@ -117,8 +118,8 @@ CustomContainer<Type>& CustomContainer<Type>::operator=(const CustomContainer<Ty
 
 	for (size_t index{}; index < other.Size(); ++index)
 	{
-		CurrentElement = Head + index;
-		new (CurrentElement) Type(*(other.Head + index));
+		LastElement = Head + index;
+		new (LastElement) Type(*(other.Head + index));
 	}
 
 	return *this;
@@ -129,13 +130,13 @@ CustomContainer<Type>& CustomContainer<Type>::operator=(CustomContainer<Type>&& 
 {
 	Head = std::move(other.Head);
 	Tail = std::move(other.Tail);
-	CurrentElement = std::move(other.CurrentElement);
+	LastElement = std::move(other.LastElement);
 
 	/* Don't release memory you're not reallocating fucking dumbass */
 
 	other.Head = nullptr;
 	other.Tail = nullptr;
-	other.CurrentElement = nullptr;
+	other.LastElement = nullptr;
 
 	return *this;
 }
@@ -156,7 +157,7 @@ template<typename Type>
 template<typename ...Values>
 void CustomContainer<Type>::Emplace(Values&&... val)
 {
-	Type* const pNextBlock{ CurrentElement != nullptr ? CurrentElement + 1 : Head };
+	Type* const pNextBlock{ LastElement != nullptr ? LastElement + 1 : Head };
 
 	if (!pNextBlock || pNextBlock >= Tail)
 	{
@@ -168,24 +169,24 @@ void CustomContainer<Type>::Emplace(Values&&... val)
 		// CurrentElement = new Type(std::forward<Values>(val)...);
 		*pNextBlock = Type(std::forward<Values>(val)...);
 
-		CurrentElement = pNextBlock;
+		LastElement = pNextBlock;
 	}
 }
 
 template<typename Type>
 void CustomContainer<Type>::Pop()
 {
-	if (CurrentElement)
+	if (LastElement)
 	{
 		if constexpr (!std::is_trivially_destructible_v<Type>)
 		{
-			CurrentElement->~Type();
+			LastElement->~Type();
 		}
 
-		Type* pPreviousBlock{ CurrentElement - 1 > Head ? CurrentElement - 1 : nullptr };
+		Type* pPreviousBlock{ LastElement - 1 > Head ? LastElement - 1 : nullptr };
 
-		CurrentElement = nullptr;
-		CurrentElement = pPreviousBlock;
+		LastElement = nullptr;
+		LastElement = pPreviousBlock;
 	}
 }
 
@@ -194,13 +195,13 @@ void CustomContainer<Type>::Clear()
 {
 	DeleteData(Head, Tail);
 
-	CurrentElement = nullptr;
+	LastElement = nullptr;
 }
 
 template<typename Type>
 size_t CustomContainer<Type>::Size() const
 {
-	return CurrentElement != nullptr ? CurrentElement - Head + 1 : 0;
+	return LastElement != nullptr ? LastElement - Head + 1 : 0;
 }
 
 template<typename Type>
@@ -259,23 +260,23 @@ const Type& CustomContainer<Type>::Front() const
 template<typename Type>
 Type& CustomContainer<Type>::Back()
 {
-	ASSERT((CurrentElement != nullptr), "Container::Back() > Out of range!");
+	ASSERT((LastElement != nullptr), "Container::Back() > Out of range!");
 
-	return *CurrentElement;
+	return *LastElement;
 }
 
 template<typename Type>
 const Type& CustomContainer<Type>::Back() const
 {
-	ASSERT((CurrentElement != nullptr), "Container::Back() > Out of range!");
+	ASSERT((LastElement != nullptr), "Container::Back() > Out of range!");
 
-	return *CurrentElement;
+	return *LastElement;
 }
 
 template<typename Type>
 bool CustomContainer<Type>::IsEmpty() const
 {
-	return CurrentElement == nullptr;
+	return LastElement == nullptr;
 }
 
 template<typename Type>
@@ -354,8 +355,8 @@ void CustomContainer<Type>::Reallocate(size_t newCapacity)
 
 	for (size_t index{}; index < size; ++index)
 	{
-		CurrentElement = Head + index; // adjust pointer
-		*CurrentElement = std::move(*(pOldHead + index)); // move element from old memory over
+		LastElement = Head + index; // adjust pointer
+		*LastElement = std::move(*(pOldHead + index)); // move element from old memory over
 	}
 
 	DeleteData(pOldHead, pOldTail);
@@ -392,16 +393,16 @@ void CustomContainer<Type>::ReallocateAndEmplace(Values && ...values)
 {
 	Reallocate(Size() + Size() / 2 + 1);
 
-	if (!CurrentElement)
+	if (!LastElement)
 	{
-		CurrentElement = Head;
+		LastElement = Head;
 	}
 	else
 	{
-		++CurrentElement;
+		++LastElement;
 	}
 
 	/* [TODO]: AN ALLOCATOR SHOULD DO THIS */
 	// CurrentElement = new Type(std::forward<Values>(val)...);
-	*CurrentElement = Type(std::forward<Values>(values)...);
+	*LastElement = Type(std::forward<Values>(values)...);
 }
