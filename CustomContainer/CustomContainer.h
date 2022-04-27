@@ -338,7 +338,7 @@ private:
 	{
 		if (pOldHead)
 		{
-			free(pOldHead);
+			delete[] pOldHead;
 			pOldHead = nullptr;
 		}
 	}
