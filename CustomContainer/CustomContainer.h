@@ -308,3 +308,52 @@ private:
 	Type* Tail{ nullptr };
 	Type* LastElement{ nullptr };
 };
+
+template<typename Type>
+class CustomContainerIterator final
+{
+public:
+	using difference_type = std::ptrdiff_t;
+
+	CustomContainerIterator(Type* const pPointer)
+		: Pointer{ pPointer }
+	{}
+
+	/* Default rule of 5 is good enough */
+	CustomContainerIterator(const CustomContainerIterator&) noexcept = default;
+	CustomContainerIterator(CustomContainerIterator&&) noexcept = default;
+	CustomContainerIterator& operator=(const CustomContainerIterator&) noexcept = default;
+	CustomContainerIterator& operator=(CustomContainerIterator&&) noexcept = default;
+
+	CustomContainerIterator& operator+=(difference_type diff) { Pointer += diff; return *this; }
+	CustomContainerIterator& operator-=(difference_type diff) { Pointer -= diff; return *this; }
+
+	Type& operator*() const { return *Pointer; }
+	Type* operator->() const { return Pointer; }
+	Type& operator[](difference_type diff) const { return Pointer[diff]; }
+
+	CustomContainerIterator& operator++() { ++Pointer; return *this; }
+	CustomContainerIterator& operator--() { --Pointer; return *this; }
+	CustomContainerIterator& operator++(int) { CustomContainerIterator temp(*this); ++Pointer; return temp; }
+	CustomContainerIterator& operator--(int) { CustomContainerIterator temp(*this); --Pointer; return temp; }
+
+	difference_type operator-(const CustomContainerIterator& other) const { return Pointer - other.Pointer; }
+
+	CustomContainerIterator operator+(difference_type diff) const { return CustomContainer(Pointer + diff); }
+	CustomContainerIterator operator-(difference_type diff) const { return CustomContainer(Pointer - diff); }
+
+	friend CustomContainerIterator operator+(difference_type diff, const CustomContainerIterator& it) { return CustomContainerIterator(diff + it.Pointer); }
+	friend CustomContainerIterator operator-(difference_type diff, const CustomContainerIterator& it) { return CustomContainerIterator(diff - it.Pointer); }
+
+	bool operator==(const CustomContainerIterator& it) const { return Pointer == it.Pointer; };
+	bool operator!=(const CustomContainerIterator& it) const { return Pointer != it.Pointer; };
+	
+	bool operator>(const CustomContainerIterator& it) const { return Pointer > it.Pointer; };
+	bool operator<(const CustomContainerIterator& it) const { return Pointer < it.Pointer; };
+	
+	bool operator>=(const CustomContainerIterator& it) const { return Pointer >= it.Pointer; };
+	bool operator<=(const CustomContainerIterator& it) const { return Pointer <= it.Pointer; };
+
+private:
+	Type* Pointer{ nullptr };
+};
