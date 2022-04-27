@@ -123,7 +123,6 @@ public:
 	{
 		const size_t capacity{ other.Capacity() };
 
-		//Head = static_cast<Type*>(malloc(SizeOfType * capacity));
 		Head = new Type[capacity]();
 		Tail = Head + capacity;
 
@@ -148,7 +147,7 @@ public:
 	{
 		const size_t capacity{ other.Capacity() };
 
-		Head = static_cast<Type*>(malloc(SizeOfType * capacity));
+		Head = new Type[capacity]();
 		Tail = Head + capacity;
 
 		for (size_t index{}; index < other.Size(); ++index)
@@ -196,7 +195,8 @@ public:
 		{
 			/* [TODO]: AN ALLOCATOR SHOULD DO THIS */
 			// CurrentElement = new Type(std::forward<Values>(val)...);
-			*pNextBlock = Type(std::forward<Values>(val)...);
+
+			new (pNextBlock) Type(std::forward<Values>(val)...);
 
 			LastElement = pNextBlock;
 		}
@@ -204,18 +204,17 @@ public:
 
 	void Pop()
 	{
-		if (LastElement)
+		ASSERT(LastElement, "No elements to be popped!");
+
+		if constexpr (!std::is_trivially_destructible_v<Type>)
 		{
-			if constexpr (!std::is_trivially_destructible_v<Type>)
-			{
-				LastElement->~Type();
-			}
-
-			Type* pPreviousBlock{ LastElement - 1 > Head ? LastElement - 1 : nullptr };
-
-			LastElement = nullptr;
-			LastElement = pPreviousBlock;
+			LastElement->~Type();
 		}
+
+		Type* pPreviousBlock{ LastElement - 1 > Head ? LastElement - 1 : nullptr };
+
+		LastElement = nullptr;
+		LastElement = pPreviousBlock;
 	}
 
 	void Clear()
@@ -328,11 +327,11 @@ public:
 	RandomIterator<Type> begin() noexcept { return RandomIterator(Head); }
 	RandomConstIterator<Type> begin() const noexcept { return RandomConstIterator(Head); }
 
-	RandomIterator<Type> end() noexcept { return RandomIterator(Tail); }
-	RandomConstIterator<Type> end() const noexcept { return RandomConstIterator(Tail); }
+	RandomIterator<Type> end() noexcept { return RandomIterator(LastElement + 1); }
+	RandomConstIterator<Type> end() const noexcept { return RandomConstIterator(LastElement + 1); }
 
 	RandomConstIterator<Type> cbegin() const noexcept { return RandomConstIterator(Head); }
-	RandomConstIterator<Type> cend() const noexcept { return RandomConstIterator(Tail); }
+	RandomConstIterator<Type> cend() const noexcept { return RandomConstIterator(LastElement + 1); }
 
 private:
 	void ReleaseMemory(Type*& pOldHead)
@@ -392,7 +391,8 @@ private:
 
 		/* [TODO]: AN ALLOCATOR SHOULD DO THIS */
 		// CurrentElement = new Type(std::forward<Values>(val)...);
-		*LastElement = Type(std::forward<Values>(values)...);
+
+		new (LastElement) Type(std::forward<Values>(values)...);
 	}
 
 	void ResizeToBigger(size_t newSize)
