@@ -366,7 +366,7 @@ void CustomContainer<Type>::Reallocate(size_t newCapacity)
 template<typename Type>
 void CustomContainer<Type>::ResizeToBigger(size_t newSize)
 {
-	static_assert(std::is_trivially_constructible_v<Type>, "Container::Resize() > Type is not default constructable!");
+	static_assert(std::is_default_constructible_v<Type>, "Container::Resize() > Type is not default constructable!");
 
 	const size_t sizeDifference{ newSize - Size() };
 
