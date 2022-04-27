@@ -11,398 +11,301 @@ class CustomContainer final
 public:
 	CustomContainer() = default;
 
-	~CustomContainer();
+	~CustomContainer()
+	{
+		DeleteData(Head, Tail);
+		ReleaseMemory(Head);
+	}
 
 	/* If these aren't marked as noexcept, VS keeps complaining */
-	CustomContainer(const CustomContainer& other) noexcept;
-	CustomContainer(CustomContainer&& other) noexcept;
-	CustomContainer<Type>& operator=(const CustomContainer& other) noexcept;
-	CustomContainer<Type>& operator=(CustomContainer&& other) noexcept;
+	CustomContainer(const CustomContainer& other) noexcept
+	{
+		const size_t capacity{ other.Capacity() };
 
-	void Add(const Type& val);
-	void Add(Type&& val);
+		Head = static_cast<Type*>(malloc(SizeOfType * capacity));
+		Tail = Head + capacity;
+
+		for (size_t index{}; index < other.Size(); ++index)
+		{
+			LastElement = Head + index;
+			new (LastElement) Type(*(other.Head + index));
+		}
+	}
+	CustomContainer(CustomContainer&& other) noexcept
+		: Head{ std::move(other.Head) }
+		, Tail{ std::move(other.Tail) }
+		, LastElement{ std::move(other.LastElement) }
+	{
+		/* Don't release memory you're not reallocating fucking dumbass */
+		other.Head = nullptr;
+		other.Tail = nullptr;
+		other.LastElement = nullptr;
+	}
+
+	CustomContainer<Type>& operator=(const CustomContainer& other) noexcept
+	{
+		const size_t capacity{ other.Capacity() };
+
+		Head = static_cast<Type*>(malloc(SizeOfType * capacity));
+		Tail = Head + capacity;
+
+		for (size_t index{}; index < other.Size(); ++index)
+		{
+			LastElement = Head + index;
+			new (LastElement) Type(*(other.Head + index));
+		}
+
+		return *this;
+	}
+	CustomContainer<Type>& operator=(CustomContainer&& other) noexcept
+	{
+		Head = std::move(other.Head);
+		Tail = std::move(other.Tail);
+		LastElement = std::move(other.LastElement);
+
+		/* Don't release memory you're not reallocating fucking dumbass */
+
+		other.Head = nullptr;
+		other.Tail = nullptr;
+		other.LastElement = nullptr;
+
+		return *this;
+	}
+
+	void Add(const Type& val)
+	{
+		Emplace(val);
+	}
+	void Add(Type&& val)
+	{
+		Emplace(std::move(val));
+	}
 
 	template<typename ... Values>
-	void Emplace(Values&&... val);
+	void Emplace(Values&&... val)
+	{
+		Type* const pNextBlock{ LastElement != nullptr ? LastElement + 1 : Head };
 
-	void Pop();
+		if (!pNextBlock || pNextBlock >= Tail)
+		{
+			ReallocateAndEmplace(std::forward<Values>(val)...);
+		}
+		else
+		{
+			/* [TODO]: AN ALLOCATOR SHOULD DO THIS */
+			// CurrentElement = new Type(std::forward<Values>(val)...);
+			*pNextBlock = Type(std::forward<Values>(val)...);
 
-	void Clear();
+			LastElement = pNextBlock;
+		}
+	}
 
-	size_t Size() const;
+	void Pop()
+	{
+		if (LastElement)
+		{
+			if constexpr (!std::is_trivially_destructible_v<Type>)
+			{
+				LastElement->~Type();
+			}
 
-	size_t Capacity() const;
+			Type* pPreviousBlock{ LastElement - 1 > Head ? LastElement - 1 : nullptr };
 
-	void Reserve(size_t newCapacity);
+			LastElement = nullptr;
+			LastElement = pPreviousBlock;
+		}
+	}
 
-	void Resize(size_t newSize);
+	void Clear()
+	{
+		DeleteData(Head, Tail);
 
-	void ShrinkToFit();
+		LastElement = nullptr;
+	}
 
-	Type& Front();
-	const Type& Front() const;
+	size_t Size() const
+	{
+		return LastElement != nullptr ? LastElement - Head + 1 : 0;
+	}
 
-	Type& Back();
-	const Type& Back() const;
+	size_t Capacity() const
+	{
+		return Tail - Head;
+	}
 
-	bool IsEmpty() const;
+	void Reserve(size_t newCapacity)
+	{
+		if (newCapacity <= Capacity())
+			return;
 
-	Type& At(size_t index);
-	const Type& At(size_t index) const;
+		Reallocate(newCapacity);
+	}
 
-	Type& operator[](size_t index);
-	const Type& operator[](size_t index) const;
+	void Resize(size_t newSize)
+	{
+		if (newSize > Size())
+		{
+			ResizeToBigger(newSize);
+		}
+		else if (newSize < Size())
+		{
+			ResizeToSmaller(newSize);
+		}
+	}
 
-	Type* const Data();
-	const Type* const Data() const;
+	void ShrinkToFit()
+	{
+		if (Size() == Capacity())
+			return;
+
+		Reallocate(Size());
+	}
+
+	Type& Front()
+	{
+		ASSERT((Head != nullptr), "Container::Front() > Out of range!");
+
+		return *(Head);
+	}
+	const Type& Front() const
+	{
+		ASSERT((Head != nullptr), "Container::Front() > Out of range!");
+
+		return *(Head);
+	}
+
+	Type& Back()
+	{
+		ASSERT((LastElement != nullptr), "Container::Back() > Out of range!");
+
+		return *LastElement;
+	}
+	const Type& Back() const
+	{
+		ASSERT((LastElement != nullptr), "Container::Back() > Out of range!");
+
+		return *LastElement;
+	}
+
+	bool IsEmpty() const
+	{
+		return LastElement == nullptr;
+	}
+
+	Type& At(size_t index)
+	{
+		ASSERT(((Head + index) < Tail), "Container::At() > Index was out of range!");
+
+		return *(Head + index);
+	}
+	const Type& At(size_t index) const
+	{
+		ASSERT(((Head + index) < Tail), "Container::At() > Index was out of range!");
+
+		return *(Head + index);
+	}
+
+	Type& operator[](size_t index)
+	{
+		return *(Head + index);
+	}
+	const Type& operator[](size_t index) const
+	{
+		return *(Head + index);
+	}
+
+	Type* const Data()
+	{
+		return Head;
+	}
+	const Type* const Data() const
+	{
+		return Head;
+	}
 
 private:
-	void ReleaseMemory(Type*& pOldHead);
+	void ReleaseMemory(Type*& pOldHead)
+	{
+		if (pOldHead)
+		{
+			free(pOldHead);
+			pOldHead = nullptr;
+		}
+	}
 
-	void DeleteData(Type* pHead, Type* const pTail);
+	void DeleteData(Type* pHead, Type* const pTail)
+	{
+		if constexpr (!std::is_trivially_destructible_v<Type>) // if this is a struct / class with a custom destructor, call it
+		{
+			while (pHead <= pTail)
+			{
+				pHead->~Type();
+				++pHead;
+			}
+		}
+	}
 
-	void Reallocate(size_t newCapacity);
+	void Reallocate(size_t newCapacity)
+	{
+		const size_t size{ Size() };
+
+		Type* pOldHead{ Head };
+		Type* const pOldTail{ Tail };
+
+		Head = static_cast<Type*>(malloc(SizeOfType * newCapacity));
+		Tail = Head + newCapacity;
+
+		for (size_t index{}; index < size; ++index)
+		{
+			LastElement = Head + index; // adjust pointer
+			*LastElement = std::move(*(pOldHead + index)); // move element from old memory over
+		}
+
+		DeleteData(pOldHead, pOldTail);
+		ReleaseMemory(pOldHead);
+	}
 
 	template<typename ... Values>
-	void ReallocateAndEmplace(Values&&... values);
+	void ReallocateAndEmplace(Values && ...values)
+	{
+		Reallocate(Size() + Size() / 2 + 1);
 
-	void ResizeToBigger(size_t newSize);
-	void ResizeToSmaller(size_t newSize);
+		if (!LastElement)
+		{
+			LastElement = Head;
+		}
+		else
+		{
+			++LastElement;
+		}
+
+		/* [TODO]: AN ALLOCATOR SHOULD DO THIS */
+		// CurrentElement = new Type(std::forward<Values>(val)...);
+		*LastElement = Type(std::forward<Values>(values)...);
+	}
+
+	void ResizeToBigger(size_t newSize)
+	{
+		static_assert(std::is_default_constructible_v<Type>, "Container::Resize() > Type is not default constructable!");
+
+		const size_t sizeDifference{ newSize - Size() };
+
+		for (size_t i{}; i < sizeDifference; ++i)
+		{
+			Emplace(Type{});
+		}
+	}
+	void ResizeToSmaller(size_t newSize)
+	{
+		const size_t sizeDifference{ Size() - newSize };
+
+		for (size_t i{}; i < sizeDifference; ++i)
+		{
+			Pop();
+		}
+	}
 
 	Type* Head{ nullptr };
 	Type* Tail{ nullptr };
 	Type* LastElement{ nullptr };
 };
-
-template<typename Type>
-CustomContainer<Type>::~CustomContainer()
-{
-	DeleteData(Head, Tail);
-	ReleaseMemory(Head);
-}
-
-template<typename Type>
-CustomContainer<Type>::CustomContainer(const CustomContainer<Type>& other) noexcept
-{
-	const size_t capacity{ other.Capacity() };
-
-	Head = static_cast<Type*>(malloc(SizeOfType * capacity));
-	Tail = Head + capacity;
-
-	for (size_t index{}; index < other.Size(); ++index)
-	{
-		LastElement = Head + index;
-		new (LastElement) Type(*(other.Head + index));
-	}
-}
-
-template<typename Type>
-CustomContainer<Type>::CustomContainer(CustomContainer<Type>&& other) noexcept
-	: Head{ std::move(other.Head) }
-	, Tail{ std::move(other.Tail) }
-	, LastElement{ std::move(other.LastElement) }
-{
-	/* Don't release memory you're not reallocating fucking dumbass */
-	other.Head = nullptr;
-	other.Tail = nullptr;
-	other.LastElement = nullptr;
-}
-
-template<typename Type>
-CustomContainer<Type>& CustomContainer<Type>::operator=(const CustomContainer<Type>& other) noexcept
-{
-	const size_t capacity{ other.Capacity() };
-
-	Head = static_cast<Type*>(malloc(SizeOfType * capacity));
-	Tail = Head + capacity;
-
-	for (size_t index{}; index < other.Size(); ++index)
-	{
-		LastElement = Head + index;
-		new (LastElement) Type(*(other.Head + index));
-	}
-
-	return *this;
-}
-
-template<typename Type>
-CustomContainer<Type>& CustomContainer<Type>::operator=(CustomContainer<Type>&& other) noexcept
-{
-	Head = std::move(other.Head);
-	Tail = std::move(other.Tail);
-	LastElement = std::move(other.LastElement);
-
-	/* Don't release memory you're not reallocating fucking dumbass */
-
-	other.Head = nullptr;
-	other.Tail = nullptr;
-	other.LastElement = nullptr;
-
-	return *this;
-}
-
-template<typename Type>
-void CustomContainer<Type>::Add(const Type& val)
-{
-	Emplace(val);
-}
-
-template<typename Type>
-void CustomContainer<Type>::Add(Type&& val)
-{
-	Emplace(std::move(val));
-}
-
-template<typename Type>
-template<typename ...Values>
-void CustomContainer<Type>::Emplace(Values&&... val)
-{
-	Type* const pNextBlock{ LastElement != nullptr ? LastElement + 1 : Head };
-
-	if (!pNextBlock || pNextBlock >= Tail)
-	{
-		ReallocateAndEmplace(std::forward<Values>(val)...);
-	}
-	else
-	{
-		/* [TODO]: AN ALLOCATOR SHOULD DO THIS */
-		// CurrentElement = new Type(std::forward<Values>(val)...);
-		*pNextBlock = Type(std::forward<Values>(val)...);
-
-		LastElement = pNextBlock;
-	}
-}
-
-template<typename Type>
-void CustomContainer<Type>::Pop()
-{
-	if (LastElement)
-	{
-		if constexpr (!std::is_trivially_destructible_v<Type>)
-		{
-			LastElement->~Type();
-		}
-
-		Type* pPreviousBlock{ LastElement - 1 > Head ? LastElement - 1 : nullptr };
-
-		LastElement = nullptr;
-		LastElement = pPreviousBlock;
-	}
-}
-
-template<typename Type>
-void CustomContainer<Type>::Clear()
-{
-	DeleteData(Head, Tail);
-
-	LastElement = nullptr;
-}
-
-template<typename Type>
-size_t CustomContainer<Type>::Size() const
-{
-	return LastElement != nullptr ? LastElement - Head + 1 : 0;
-}
-
-template<typename Type>
-size_t CustomContainer<Type>::Capacity() const
-{
-	return Tail - Head;
-}
-
-template<typename Type>
-void CustomContainer<Type>::Reserve(size_t newCapacity)
-{
-	if (newCapacity <= Capacity())
-		return;
-
-	Reallocate(newCapacity);
-}
-
-template<typename Type>
-void CustomContainer<Type>::Resize(size_t newSize)
-{
-	if (newSize > Size())
-	{
-		ResizeToBigger(newSize);
-	}
-	else if (newSize < Size())
-	{
-		ResizeToSmaller(newSize);
-	}
-}
-
-template<typename Type>
-void CustomContainer<Type>::ShrinkToFit()
-{
-	if (Size() == Capacity())
-		return;
-
-	Reallocate(Size());
-}
-
-template<typename Type>
-Type& CustomContainer<Type>::Front()
-{
-	ASSERT((Head != nullptr), "Container::Front() > Out of range!");
-
-	return *(Head);
-}
-
-template<typename Type>
-const Type& CustomContainer<Type>::Front() const
-{
-	ASSERT((Head != nullptr), "Container::Front() > Out of range!");
-
-	return *(Head);
-}
-
-template<typename Type>
-Type& CustomContainer<Type>::Back()
-{
-	ASSERT((LastElement != nullptr), "Container::Back() > Out of range!");
-
-	return *LastElement;
-}
-
-template<typename Type>
-const Type& CustomContainer<Type>::Back() const
-{
-	ASSERT((LastElement != nullptr), "Container::Back() > Out of range!");
-
-	return *LastElement;
-}
-
-template<typename Type>
-bool CustomContainer<Type>::IsEmpty() const
-{
-	return LastElement == nullptr;
-}
-
-template<typename Type>
-Type& CustomContainer<Type>::At(size_t index)
-{
-	ASSERT(((Head + index) < Tail), "Container::At() > Index was out of range!");
-
-	return *(Head + index);
-}
-
-template<typename Type>
-const Type& CustomContainer<Type>::At(size_t index) const
-{
-	ASSERT(((Head + index) < Tail), "Container::At() > Index was out of range!");
-
-	return *(Head + index);
-}
-
-template<typename Type>
-Type& CustomContainer<Type>::operator[](size_t index)
-{
-	return *(Head + index);
-}
-
-template<typename Type>
-const Type& CustomContainer<Type>::operator[](size_t index) const
-{
-	return *(Head + index);
-}
-
-template<typename Type>
-Type* const CustomContainer<Type>::Data()
-{
-	return Head;
-}
-
-template<typename Type>
-const Type* const CustomContainer<Type>::Data() const
-{
-	return Head;
-}
-
-template<typename Type>
-void CustomContainer<Type>::ReleaseMemory(Type*& pOldHead)
-{
-	if (pOldHead)
-	{
-		free(pOldHead);
-		pOldHead = nullptr;
-	}
-}
-
-template<typename Type>
-void CustomContainer<Type>::DeleteData(Type* pHead, Type* const pTail)
-{
-	if constexpr (!std::is_trivially_destructible_v<Type>) // if this is a struct / class with a custom destructor, call it
-	{
-		while (pHead <= pTail)
-		{
-			pHead->~Type();
-			++pHead;
-		}
-	}
-}
-
-template<typename Type>
-void CustomContainer<Type>::Reallocate(size_t newCapacity)
-{
-	const size_t size{ Size() };
-
-	Type* pOldHead{ Head };
-	Type* const pOldTail{ Tail };
-
-	Head = static_cast<Type*>(malloc(SizeOfType * newCapacity));
-	Tail = Head + newCapacity;
-
-	for (size_t index{}; index < size; ++index)
-	{
-		LastElement = Head + index; // adjust pointer
-		*LastElement = std::move(*(pOldHead + index)); // move element from old memory over
-	}
-
-	DeleteData(pOldHead, pOldTail);
-	ReleaseMemory(pOldHead);
-}
-
-template<typename Type>
-void CustomContainer<Type>::ResizeToBigger(size_t newSize)
-{
-	static_assert(std::is_default_constructible_v<Type>, "Container::Resize() > Type is not default constructable!");
-
-	const size_t sizeDifference{ newSize - Size() };
-
-	for (size_t i{}; i < sizeDifference; ++i)
-	{
-		Emplace(Type{});
-	}
-}
-
-template<typename Type>
-void CustomContainer<Type>::ResizeToSmaller(size_t newSize)
-{
-	const size_t sizeDifference{ Size() - newSize };
-
-	for (size_t i{}; i < sizeDifference; ++i)
-	{
-		Pop();
-	}
-}
-
-template<typename Type>
-template<typename ...Values>
-void CustomContainer<Type>::ReallocateAndEmplace(Values && ...values)
-{
-	Reallocate(Size() + Size() / 2 + 1);
-
-	if (!LastElement)
-	{
-		LastElement = Head;
-	}
-	else
-	{
-		++LastElement;
-	}
-
-	/* [TODO]: AN ALLOCATOR SHOULD DO THIS */
-	// CurrentElement = new Type(std::forward<Values>(val)...);
-	*LastElement = Type(std::forward<Values>(values)...);
-}
