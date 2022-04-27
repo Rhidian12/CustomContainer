@@ -6,6 +6,8 @@
 #include <algorithm> // std::max_element, std::min_element, std::remove_if
 #include <deque> /* std::deque */
 
+#include <vld.h>
+
 #define UNIT_TESTS
 #ifdef UNIT_TESTS
 #define CATCH_CONFIG_MAIN
