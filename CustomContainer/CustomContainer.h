@@ -52,7 +52,8 @@ public:
 	Type& operator[](size_t index);
 	const Type& operator[](size_t index) const;
 
-	Type* const Data() const;
+	Type* const Data();
+	const Type* const Data() const;
 
 private:
 	void ReleaseMemory(Type*& pOldHead);
@@ -308,7 +309,13 @@ const Type& CustomContainer<Type>::operator[](size_t index) const
 }
 
 template<typename Type>
-Type* const CustomContainer<Type>::Data() const
+Type* const CustomContainer<Type>::Data()
+{
+	return Head;
+}
+
+template<typename Type>
+const Type* const CustomContainer<Type>::Data() const
 {
 	return Head;
 }
