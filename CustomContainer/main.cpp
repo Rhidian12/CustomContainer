@@ -15,7 +15,6 @@
 
 TEST_CASE("Testing The Container")
 {
-	std::vector<int> test(std::vector<int>{});
 	CustomContainer<int> intContainer{};
 
 	REQUIRE(intContainer.IsEmpty());
