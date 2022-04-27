@@ -175,20 +175,18 @@ void CustomContainer<Type>::Emplace(Values&&... val)
 template<typename Type>
 void CustomContainer<Type>::Pop()
 {
-	if (Size() <= 0)
-		return;
-
-	DeleteData(CurrentElement, CurrentElement);
-
-	Type* pPreviousBlock{ CurrentElement - 1 };
-	
-	if (pPreviousBlock < Head)
+	if (CurrentElement)
 	{
-		pPreviousBlock = nullptr;
-	}
+		if constexpr (!std::is_trivially_destructible_v<Type>)
+		{
+			CurrentElement->~Type();
+		}
 
-	CurrentElement = nullptr;
-	CurrentElement = pPreviousBlock;
+		Type* pPreviousBlock{ CurrentElement - 1 > Head ? CurrentElement - 1 : nullptr };
+
+		CurrentElement = nullptr;
+		CurrentElement = pPreviousBlock;
+	}
 }
 
 template<typename Type>
