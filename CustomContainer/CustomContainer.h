@@ -1,6 +1,8 @@
 #pragma once
 #include "Utils.h"
 
+#include "PoolAllocator.h"
+
 template<typename Type>
 class RandomIterator final
 {
@@ -123,13 +125,15 @@ public:
 	{
 		const size_t capacity{ other.Capacity() };
 
-		Head = new Type[capacity]();
+		// Head = new Type[capacity]();
+		Head = PoolAllocator::allocate<Type>(capacity);
 		Tail = Head + capacity;
 
 		for (size_t index{}; index < other.Size(); ++index)
 		{
 			LastElement = Head + index;
-			new (LastElement) Type(*(other.Head + index));
+			// new (LastElement) Type(*(other.Head + index));
+			PoolAllocator::construct(LastElement, *(other.Head + index));
 		}
 	}
 	CustomContainer(CustomContainer&& other) noexcept
@@ -147,13 +151,15 @@ public:
 	{
 		const size_t capacity{ other.Capacity() };
 
-		Head = new Type[capacity]();
+		//Head = new Type[capacity]();
+		Head = PoolAllocator::allocate<Type>(capacity);
 		Tail = Head + capacity;
 
 		for (size_t index{}; index < other.Size(); ++index)
 		{
 			LastElement = Head + index;
-			new (LastElement) Type(*(other.Head + index));
+			// new (LastElement) Type(*(other.Head + index));
+			PoolAllocator::construct(LastElement, *(other.Head + index));
 		}
 
 		return *this;
@@ -196,7 +202,8 @@ public:
 			/* [TODO]: AN ALLOCATOR SHOULD DO THIS */
 			// CurrentElement = new Type(std::forward<Values>(val)...);
 
-			new (pNextBlock) Type(std::forward<Values>(val)...);
+			// new (pNextBlock) Type(std::forward<Values>(val)...);
+			PoolAllocator::construct(pNextBlock, std::forward<Values>(val)...);
 
 			LastElement = pNextBlock;
 		}
@@ -336,10 +343,15 @@ public:
 private:
 	void ReleaseMemory(Type*& pOldHead)
 	{
+		//if (pOldHead)
+		//{
+		//	delete[] pOldHead;
+		//	pOldHead = nullptr;
+		//}
+
 		if (pOldHead)
 		{
-			delete[] pOldHead;
-			pOldHead = nullptr;
+			PoolAllocator::deallocate(pOldHead);
 		}
 	}
 
@@ -349,7 +361,8 @@ private:
 		{
 			while (pHead <= pTail)
 			{
-				pHead->~Type();
+				PoolAllocator::destroy(pHead);
+				//pHead->~Type();
 				++pHead;
 			}
 		}
@@ -362,7 +375,8 @@ private:
 		Type* pOldHead{ Head };
 		Type* const pOldTail{ Tail };
 
-		Head = static_cast<Type*>(malloc(SizeOfType * newCapacity));
+		// Head = static_cast<Type*>(malloc(SizeOfType * newCapacity));
+		Head = PoolAllocator::allocate<Type>(newCapacity);
 		Tail = Head + newCapacity;
 
 		for (size_t index{}; index < size; ++index)
@@ -392,7 +406,8 @@ private:
 		/* [TODO]: AN ALLOCATOR SHOULD DO THIS */
 		// CurrentElement = new Type(std::forward<Values>(val)...);
 
-		new (LastElement) Type(std::forward<Values>(values)...);
+		// new (LastElement) Type(std::forward<Values>(values)...);
+		PoolAllocator::construct(LastElement, std::forward<Values>(values)...);
 	}
 
 	void ResizeToBigger(size_t newSize)
