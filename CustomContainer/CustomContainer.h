@@ -20,9 +20,9 @@ public:
 	RandomIterator& operator+=(difference_type diff) { Pointer += diff; return *this; }
 	RandomIterator& operator-=(difference_type diff) { Pointer -= diff; return *this; }
 
-	Type& operator*() const { return *Pointer; }
-	Type* operator->() const { return Pointer; }
-	Type& operator[](difference_type diff) const { return Pointer[diff]; }
+	Type& operator*() { return *Pointer; }
+	Type* operator->() { return Pointer; }
+	Type& operator[](difference_type diff) { return Pointer[diff]; }
 
 	const Type& operator*() const { return *Pointer; }
 	const Type* operator->() const { return Pointer; }
@@ -123,7 +123,8 @@ public:
 	{
 		const size_t capacity{ other.Capacity() };
 
-		Head = static_cast<Type*>(malloc(SizeOfType * capacity));
+		//Head = static_cast<Type*>(malloc(SizeOfType * capacity));
+		Head = new Type[capacity]();
 		Tail = Head + capacity;
 
 		for (size_t index{}; index < other.Size(); ++index)
