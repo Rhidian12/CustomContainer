@@ -105,7 +105,6 @@ private:
 	Type* Pointer{ nullptr };
 };
 
-/* [TODO]: Make Allocator */
 /* [TODO]: Make Insert() and Emplace_At() */
 template<typename Type>
 class CustomContainer final
@@ -131,8 +130,8 @@ public:
 
 		for (size_t index{}; index < other.Size(); ++index)
 		{
-			LastElement = Head + index;
 			// new (LastElement) Type(*(other.Head + index));
+			LastElement = Head + index;
 			PoolAllocator::construct(LastElement, *(other.Head + index));
 		}
 	}
