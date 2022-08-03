@@ -8,7 +8,7 @@
 
 #include <vld.h>
 
-#define UNIT_TESTS
+// #define UNIT_TESTS
 #ifdef UNIT_TESTS
 #define CATCH_CONFIG_MAIN
 #include "catch.hpp"
@@ -129,6 +129,8 @@ TEST_CASE("Testing The Container")
 }
 
 #else
+//#define STL
+#define CUSTOM
 int main(int argc, char* argv[])
 {
 	using Timepoint = std::chrono::steady_clock::time_point;
@@ -138,54 +140,66 @@ int main(int argc, char* argv[])
 	// file.open("BenchmarksReleaseX64.txt");
 
 	const int amountOfIterations{ 100 };
-	const int amountOfPushbacks{ 500 };
+	const int amountOfPushbacks{ 5000 };
 
 	std::cout << "Amount of Iterations: " << amountOfIterations << std::endl;
 	std::cout << "Amount of push_back: " << amountOfPushbacks << std::endl;
-	// file << "Amount of push_back: " << amountOfPushbacks << std::endl;
 
 	std::deque<long long> stlTimes{};
 	std::deque<long long> customTimes{};
 
-	Timepoint t1{};
-	Timepoint t2{};
+	Timepoint t1{}, t2{};
 
 	for (int i{}; i < amountOfIterations; ++i)
 	{
-		t1 = std::chrono::high_resolution_clock::now();
-
+#ifdef STL
 		std::vector<int> vector{};
 
-		for (int k{}; k < amountOfPushbacks; ++k)
-			vector.push_back(k);
+		t1 = std::chrono::steady_clock::now();
 
-		t2 = std::chrono::high_resolution_clock::now();
+		for (int j{}; j < amountOfPushbacks; ++j)
+		{
+			vector.push_back(j);
+		}
+
+		t2 = std::chrono::steady_clock::now();
 
 		stlTimes.push_back(std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count());
-
-		t1 = std::chrono::high_resolution_clock::now();
-
+#endif
+#ifdef CUSTOM
 		CustomContainer<int> container{};
 
-		for (int k{}; k < amountOfPushbacks; ++k)
-			container.Add(k);
+		t1 = std::chrono::steady_clock::now();
 
-		t2 = std::chrono::high_resolution_clock::now();
+		for (int j{}; j < amountOfPushbacks; ++j)
+		{
+			container.Add(j);
+		}
+
+		t2 = std::chrono::steady_clock::now();
 
 		customTimes.push_back(std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count());
+#endif
 	}
 
 	for (int j{}; j < amountOfIterations / 10; ++j)
 	{
+#ifdef STL
 		stlTimes.pop_back();
 		stlTimes.pop_front();
-
+#endif
+#ifdef CUSTOM
 		customTimes.pop_back();
 		customTimes.pop_front();
+#endif
 	}
 
+#ifdef STL
 	std::cout << "STL Time Average (in nanoseconds): " << std::accumulate(stlTimes.cbegin(), stlTimes.cend(), (long long)0) / stlTimes.size() << "\n";
+#endif
+#ifdef CUSTOM
 	std::cout << "Custom Time Average (in nanoseconds): " << std::accumulate(customTimes.cbegin(), customTimes.cend(), (long long)0) / customTimes.size() << "\n";
+#endif
 
 	// file.close();
 
