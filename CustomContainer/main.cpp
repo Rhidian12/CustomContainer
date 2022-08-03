@@ -8,8 +8,6 @@
 
 #include <vld.h>
 
-#include "PoolAllocator.h"
-
 #define UNIT_TESTS
 #ifdef UNIT_TESTS
 #define CATCH_CONFIG_MAIN
@@ -128,8 +126,6 @@ TEST_CASE("Testing The Container")
 
 	REQUIRE(*moveOperator.cbegin() == moveOperator.Front());
 	REQUIRE(*moveOperator.begin() == moveOperator.Front());
-
-	PoolAllocator::ReleaseAllMemory();
 }
 
 #else
