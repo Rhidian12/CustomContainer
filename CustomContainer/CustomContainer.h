@@ -193,9 +193,6 @@ public:
 		}
 		else
 		{
-			/* [TODO]: AN ALLOCATOR SHOULD DO THIS */
-			// CurrentElement = new Type(std::forward<Values>(val)...);
-
 			new (pNextBlock) Type(std::forward<Values>(val)...);
 
 			LastElement = pNextBlock;
@@ -388,9 +385,6 @@ private:
 		{
 			++LastElement;
 		}
-
-		/* [TODO]: AN ALLOCATOR SHOULD DO THIS */
-		// CurrentElement = new Type(std::forward<Values>(val)...);
 
 		new (LastElement) Type(std::forward<Values>(values)...);
 	}
