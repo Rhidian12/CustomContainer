@@ -182,18 +182,18 @@ public:
 		Emplace(std::move(val));
 	}
 
-	template<typename ... Values>
-	void Emplace(Values&&... val)
+	template<typename ... Ts>
+	void Emplace(Ts&&... val)
 	{
 		Type* const pNextBlock{ LastElement != nullptr ? LastElement + 1 : Head };
 
 		if (!pNextBlock || pNextBlock >= Tail)
 		{
-			ReallocateAndEmplace(std::forward<Values>(val)...);
+			ReallocateAndEmplace(std::forward<Ts>(val)...);
 		}
 		else
 		{
-			new (pNextBlock) Type(std::forward<Values>(val)...);
+			new (pNextBlock) Type(std::forward<Ts>(val)...);
 
 			LastElement = pNextBlock;
 		}
