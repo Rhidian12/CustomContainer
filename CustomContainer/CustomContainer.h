@@ -1,416 +1,799 @@
 #pragma once
+
 #include "Utils.h"
+#include "Types.h"
+#include "Iterator.h"
 
-template<typename Type>
-class RandomIterator final
+#include <functional> /* std::function */
+
+template<typename T>
+class Array
 {
-public:
-	using difference_type = std::ptrdiff_t;
+	using UnaryPred = std::function<bool(const T&)>;
+	using BinaryPred = std::function<bool(const T&, const T&)>;
 
-	RandomIterator(Type* const pPointer)
-		: Pointer{ pPointer }
+public:
+	using It = Iterator<T>;
+	using CIt = ConstIterator<T>;
+
+#pragma region Ctors and Dtor
+	constexpr Array()
+		: m_pHead{}
+		, m_pTail{}
+		, m_pCurrentEnd{}
 	{}
-
-	/* Default rule of 5 is good enough */
-	RandomIterator(const RandomIterator&) noexcept = default;
-	RandomIterator(RandomIterator&&) noexcept = default;
-	RandomIterator& operator=(const RandomIterator&) noexcept = default;
-	RandomIterator& operator=(RandomIterator&&) noexcept = default;
-
-	RandomIterator& operator+=(difference_type diff) { Pointer += diff; return *this; }
-	RandomIterator& operator-=(difference_type diff) { Pointer -= diff; return *this; }
-
-	Type& operator*() { return *Pointer; }
-	Type* operator->() { return Pointer; }
-	Type& operator[](difference_type diff) { return Pointer[diff]; }
-
-	const Type& operator*() const { return *Pointer; }
-	const Type* operator->() const { return Pointer; }
-	const Type& operator[](difference_type diff) const { return Pointer[diff]; }
-
-	RandomIterator& operator++() { ++Pointer; return *this; }
-	RandomIterator& operator--() { --Pointer; return *this; }
-	RandomIterator& operator++(int) { RandomIterator temp(*this); ++Pointer; return temp; }
-	RandomIterator& operator--(int) { RandomIterator temp(*this); --Pointer; return temp; }
-
-	difference_type operator-(const RandomIterator& other) const { return Pointer - other.Pointer; }
-
-	RandomIterator operator+(difference_type diff) const { return RandomIterator(Pointer + diff); }
-	RandomIterator operator-(difference_type diff) const { return RandomIterator(Pointer - diff); }
-
-	friend RandomIterator operator+(difference_type diff, const RandomIterator& it) { return RandomIterator(diff + it.Pointer); }
-	friend RandomIterator operator-(difference_type diff, const RandomIterator& it) { return RandomIterator(diff - it.Pointer); }
-
-	bool operator==(const RandomIterator& it) const { return Pointer == it.Pointer; };
-	bool operator!=(const RandomIterator& it) const { return Pointer != it.Pointer; };
-
-	bool operator>(const RandomIterator& it) const { return Pointer > it.Pointer; };
-	bool operator<(const RandomIterator& it) const { return Pointer < it.Pointer; };
-
-	bool operator>=(const RandomIterator& it) const { return Pointer >= it.Pointer; };
-	bool operator<=(const RandomIterator& it) const { return Pointer <= it.Pointer; };
-
-private:
-	Type* Pointer{ nullptr };
-};
-
-template<typename Type>
-class RandomConstIterator final
-{
-public:
-	using difference_type = std::ptrdiff_t;
-
-	RandomConstIterator(Type* const pPointer)
-		: Pointer{ pPointer }
-	{}
-
-	/* Default rule of 5 is good enough */
-	RandomConstIterator(const RandomConstIterator&) noexcept = default;
-	RandomConstIterator(RandomConstIterator&&) noexcept = default;
-	RandomConstIterator& operator=(const RandomConstIterator&) noexcept = default;
-	RandomConstIterator& operator=(RandomConstIterator&&) noexcept = default;
-
-	RandomConstIterator& operator+=(difference_type diff) { Pointer += diff; return *this; }
-	RandomConstIterator& operator-=(difference_type diff) { Pointer -= diff; return *this; }
-
-	const Type& operator*() const { return *Pointer; }
-	const Type* operator->() const { return Pointer; }
-	const Type& operator[](difference_type diff) const { return Pointer[diff]; }
-
-	RandomConstIterator& operator++() { ++Pointer; return *this; }
-	RandomConstIterator& operator--() { --Pointer; return *this; }
-	RandomConstIterator& operator++(int) { RandomConstIterator temp(*this); ++Pointer; return temp; }
-	RandomConstIterator& operator--(int) { RandomConstIterator temp(*this); --Pointer; return temp; }
-
-	difference_type operator-(const RandomConstIterator& other) const { return Pointer - other.Pointer; }
-
-	RandomConstIterator operator+(difference_type diff) const { return RandomConstIterator(Pointer + diff); }
-	RandomConstIterator operator-(difference_type diff) const { return RandomConstIterator(Pointer - diff); }
-
-	friend RandomConstIterator operator+(difference_type diff, const RandomConstIterator& it) { return RandomConstIterator(diff + it.Pointer); }
-	friend RandomConstIterator operator-(difference_type diff, const RandomConstIterator& it) { return RandomConstIterator(diff - it.Pointer); }
-
-	bool operator==(const RandomConstIterator& it) const { return Pointer == it.Pointer; };
-	bool operator!=(const RandomConstIterator& it) const { return Pointer != it.Pointer; };
-
-	bool operator>(const RandomConstIterator& it) const { return Pointer > it.Pointer; };
-	bool operator<(const RandomConstIterator& it) const { return Pointer < it.Pointer; };
-
-	bool operator>=(const RandomConstIterator& it) const { return Pointer >= it.Pointer; };
-	bool operator<=(const RandomConstIterator& it) const { return Pointer <= it.Pointer; };
-
-private:
-	Type* Pointer{ nullptr };
-};
-
-/* [TODO]: Make Allocator */
-/* [TODO]: Make Insert() and Emplace_At() */
-template<typename Type>
-class CustomContainer final
-{
-	inline static constexpr size_t SizeOfType = sizeof(Type);
-
-public:
-	CustomContainer() = default;
-	~CustomContainer()
+	constexpr Array(const Size_P size)
+		: m_pHead{}
+		, m_pTail{}
+		, m_pCurrentEnd{}
 	{
-		DeleteData(Head, Tail);
-		ReleaseMemory(Head);
+		for (uint64_t i{}; i < size._Size; ++i)
+			EmplaceBack(T{});
+	}
+	constexpr Array(const Size_P size, const T& val)
+		: m_pHead{}
+		, m_pTail{}
+		, m_pCurrentEnd{}
+	{
+		for (uint64_t i{}; i < size._Size; ++i)
+			EmplaceBack(val);
+	}
+	constexpr Array(const Capacity_P cap)
+		: m_pHead{}
+		, m_pTail{}
+		, m_pCurrentEnd{}
+	{
+		Reserve(cap._Capacity);
+	}
+	constexpr Array(std::initializer_list<T> init)
+		: m_pHead{}
+		, m_pTail{}
+		, m_pCurrentEnd{}
+	{
+		for (const T& elem : init)
+			EmplaceBack(elem);
+	}
+	constexpr Array(It beg, It end)
+		: m_pHead{}
+		, m_pTail{}
+		, m_pCurrentEnd{}
+	{
+		for (; beg != end; ++beg)
+			EmplaceBack(*beg);
 	}
 
-	/* If these aren't marked as noexcept, VS keeps complaining */
-	CustomContainer(const CustomContainer& other) noexcept
+	constexpr ~Array()
 	{
-		const size_t capacity{ other.Capacity() };
+		DeleteData(m_pHead, m_pCurrentEnd);
+		Release(m_pHead);
+	}
+#pragma endregion
 
-		Head = new Type[capacity]();
-		Tail = Head + capacity;
-
-		for (size_t index{}; index < other.Size(); ++index)
+#pragma region Rule of 5
+	constexpr Array(const Array& other) noexcept
+		: m_pHead{}
+		, m_pTail{}
+		, m_pCurrentEnd{}
+	{
+		const uint64_t cap{ other.Capacity() };
+		if (cap > 0u)
 		{
-			LastElement = Head + index;
-			new (LastElement) Type(*(other.Head + index));
+			m_pHead = new T[cap]{};
+			m_pTail = m_pHead + cap;
+
+			const uint64_t size{ other.Size() };
+			for (uint64_t i{}; i < size; ++i)
+				new (m_pHead + i) T{ *(other.m_pHead + i) }; // dont allow moving 
+
+			m_pCurrentEnd = m_pHead + size;
 		}
 	}
-	CustomContainer(CustomContainer&& other) noexcept
-		: Head{ std::move(other.Head) }
-		, Tail{ std::move(other.Tail) }
-		, LastElement{ std::move(other.LastElement) }
+	constexpr Array(Array&& other) noexcept
+		: m_pHead{ __MOVE(other.m_pHead) }
+		, m_pTail{ __MOVE(other.m_pTail) }
+		, m_pCurrentEnd{ __MOVE(other.m_pCurrentEnd) }
 	{
-		/* Don't release memory you're not reallocating fucking dumbass */
-		other.Head = nullptr;
-		other.Tail = nullptr;
-		other.LastElement = nullptr;
+		other.m_pHead = nullptr;
+		other.m_pTail = nullptr;
+		other.m_pCurrentEnd = nullptr;
 	}
 
-	CustomContainer<Type>& operator=(const CustomContainer& other) noexcept
+	constexpr Array& operator=(const Array& other) noexcept
 	{
-		const size_t capacity{ other.Capacity() };
-
-		Head = new Type[capacity]();
-		Tail = Head + capacity;
-
-		for (size_t index{}; index < other.Size(); ++index)
+		if (m_pHead)
 		{
-			LastElement = Head + index;
-			new (LastElement) Type(*(other.Head + index));
+			DeleteData(m_pHead, m_pCurrentEnd);
+			Release(m_pHead);
+		}
+
+		m_pHead = nullptr;
+		m_pTail = nullptr;
+		m_pCurrentEnd = nullptr;
+
+		const uint64_t cap{ other.Capacity() };
+		if (cap > 0u)
+		{
+			m_pHead = new T[cap]{};
+			m_pTail = m_pHead + cap;
+
+			const uint64_t size{ other.Size() };
+			for (uint64_t i{}; i < size; ++i)
+				new (m_pHead + i) T{ *(other.m_pHead + i) }; // dont allow moving 
+
+			m_pCurrentEnd = m_pHead + size;
 		}
 
 		return *this;
 	}
-	CustomContainer<Type>& operator=(CustomContainer&& other) noexcept
+	constexpr Array& operator=(Array&& other) noexcept
 	{
-		Head = std::move(other.Head);
-		Tail = std::move(other.Tail);
-		LastElement = std::move(other.LastElement);
+		if (m_pHead)
+		{
+			DeleteData(m_pHead, m_pCurrentEnd);
+			Release(m_pHead);
+		}
 
-		/* Don't release memory you're not reallocating fucking dumbass */
+		m_pHead = __MOVE(other.m_pHead);
+		m_pTail = __MOVE(other.m_pTail);
+		m_pCurrentEnd = __MOVE(other.m_pCurrentEnd);
 
-		other.Head = nullptr;
-		other.Tail = nullptr;
-		other.LastElement = nullptr;
+		other.m_pHead = nullptr;
+		other.m_pTail = nullptr;
+		other.m_pCurrentEnd = nullptr;
 
 		return *this;
 	}
+#pragma endregion
 
-	void Add(const Type& val)
+#pragma region Adding and Removing Elements
+	constexpr void Add(const T& val)
 	{
-		Emplace(val);
+		EmplaceBack(val);
 	}
-	void Add(Type&& val)
+	constexpr void Add(T&& val)
 	{
-		Emplace(std::move(val));
+		EmplaceBack(__MOVE(val));
 	}
 
-	template<typename ... Ts>
-	void Emplace(Ts&&... val)
+	constexpr void AddFront(const T& val)
 	{
-		Type* const pNextBlock{ LastElement != nullptr ? LastElement + 1 : Head };
+		EmplaceFront(val);
+	}
+	constexpr void AddFront(T&& val)
+	{
+		EmplaceFront(__MOVE(val));
+	}
 
-		if (!pNextBlock || pNextBlock >= Tail)
+	constexpr void AddRange(std::initializer_list<T> elems)
+	{
+		for (const T& elem : elems)
+			EmplaceBack(elem);
+	}
+	constexpr void AddRange(It beg, It end)
+	{
+		for (; beg != end; ++beg)
+			EmplaceBack(*beg);
+	}
+	constexpr void AddRange(T* pArr, const uint64_t n)
+	{
+		__ASSERT(pArr != nullptr);
+
+		for (uint64_t i{}; i < n; ++i)
+			EmplaceBack(pArr[i]);
+	}
+
+	constexpr It EraseByIndex(const uint64_t index)
+	{
+		__ASSERT(index < Size() && "Array::Erase() > index is out of range");
+
+		const uint64_t oldSize{ Size() };
+
+		if (index == oldSize - 1)
 		{
-			ReallocateAndEmplace(std::forward<Ts>(val)...);
+			Pop();
+
+			return end();
+		}
+		else if (index == 0)
+		{
+			PopFront();
+
+			return begin();
 		}
 		else
 		{
-			new (pNextBlock) Type(std::forward<Ts>(val)...);
+			(m_pHead + index)->~T();
+			MoveRangeBackward(m_pHead + index + 1, m_pCurrentEnd--, m_pHead + index);
 
-			LastElement = pNextBlock;
+			return It{ m_pHead + index };
 		}
 	}
 
-	void Pop()
+	constexpr It Erase(It pos)
 	{
-		ASSERT(LastElement, "No elements to be popped!");
+		__ASSERT(pos != end() && "Array::Erase() > invalid iterator was passed as a parameter");
 
-		if constexpr (!std::is_trivially_destructible_v<Type>)
-		{
-			LastElement->~Type();
-		}
+		return Erase(*pos);
+	}
+	constexpr It Erase(const T& val)
+	{
+		const uint64_t size{ Size() };
+		for (uint64_t i{}; i < size; ++i)
+			if (*(m_pHead + i) == val)
+				return EraseByIndex(i);
 
-		Type* pPreviousBlock{ LastElement - 1 > Head ? LastElement - 1 : nullptr };
+		return end();
+	}
+	constexpr It Erase(const UnaryPred& pred)
+	{
+		It it{ Find(pred) };
 
-		LastElement = nullptr;
-		LastElement = pPreviousBlock;
+		if (it != end())
+			return Erase(*it);
+
+		return end();
+	}
+	constexpr It Erase(UnaryPred&& pred)
+	{
+		It it{ Find(__MOVE(pred)) };
+
+		if (it != end())
+			return Erase(*it);
+
+		return end();
 	}
 
-	void Clear()
+	constexpr void EraseRange(const uint64_t start, const uint64_t count)
 	{
-		DeleteData(Head, Tail);
+		__ASSERT(start < Size() && "Array::EraseRange() > Start is out of range");
 
-		LastElement = nullptr;
+		EraseRange(It{ m_pHead + start }, It{ m_pHead + start + count });
+	}
+	constexpr void EraseRange(It beg, It endIt)
+	{
+		__ASSERT(beg != end() && "Array::EraseRange() > Cannot iterator past the end");
+
+		if (endIt >= end())
+			endIt = It{ m_pCurrentEnd - 1 };
+
+		for (; beg <= endIt; --endIt)
+			beg = Erase(beg);
 	}
 
-	size_t Size() const
+	constexpr void Insert(const uint64_t index, const T& val)
 	{
-		return LastElement != nullptr ? LastElement - Head + 1 : 0;
+		Emplace(index, val);
+	}
+	constexpr void Insert(const uint64_t index, T&& val)
+	{
+		Emplace(index, __MOVE(val));
 	}
 
-	size_t Capacity() const
+	constexpr void Pop()
 	{
-		return Tail - Head;
-	}
-
-	void Reserve(size_t newCapacity)
-	{
-		if (newCapacity <= Capacity())
+		if (Size() == 0)
 			return;
 
-		Reallocate(newCapacity);
+		(--m_pCurrentEnd)->~T();
 	}
 
-	void Resize(size_t newSize)
+	constexpr void PopFront()
 	{
-		if (newSize > Size())
+		if (Size() == 0)
+			return;
+
+		m_pHead->~T();
+
+		MoveRangeBackward(m_pHead + 1, m_pCurrentEnd--, m_pHead);
+	}
+
+	constexpr void Clear()
+	{
+		DeleteData(m_pHead, m_pCurrentEnd);
+
+		m_pCurrentEnd = m_pHead;
+	}
+
+	template<typename ... Ts>
+	constexpr T& EmplaceBack(Ts&&... args)
+	{
+		/* if we point past our allocated memory we have an issue */
+		if (!m_pCurrentEnd || m_pCurrentEnd >= m_pTail)
+			Reallocate();
+
+		return *(new (m_pCurrentEnd++) T{ __FORWARD(args)... });
+	}
+
+	template<typename ... Ts>
+	constexpr T& Emplace(const uint64_t index, Ts&&... args)
+	{
+		__ASSERT(index <= Size() && "Array::Emplace() > index is out of range");
+
+		const uint64_t oldSize{ Size() };
+
+		if (oldSize + 1 > Capacity())
+			Reallocate();
+
+		if (index == 0)
+			return EmplaceFront(__FORWARD(args)...);
+		else if (oldSize == 0 || index == oldSize || index == oldSize - 1)
+			return EmplaceBack(__FORWARD(args)...);
+		else
 		{
-			ResizeToBigger(newSize);
-		}
-		else if (newSize < Size())
-		{
-			ResizeToSmaller(newSize);
+			MoveRangeForward(m_pHead + index, m_pCurrentEnd++ - 1, m_pHead + index + 1);
+			return *(new (m_pHead + index) T{ __FORWARD(args)... });
 		}
 	}
 
-	void ShrinkToFit()
+	template<typename ... Ts>
+	constexpr T& EmplaceFront(Ts&&... args)
+	{
+		/* if we point past our allocated memory we have an issue */
+		if (!m_pCurrentEnd || m_pCurrentEnd >= m_pTail)
+			Reallocate();
+
+		MoveRangeForward(m_pHead, m_pCurrentEnd++, m_pHead + 1);
+
+		return *(new (m_pHead) T{ __FORWARD(args)... });
+	}
+#pragma endregion
+
+#pragma region Array Information
+	__NODISCARD constexpr bool Empty() const
+	{
+		return Size() == 0;
+	}
+
+	__NODISCARD constexpr uint64_t Size() const
+	{
+		return m_pCurrentEnd - m_pHead;
+	}
+
+	__NODISCARD constexpr uint64_t Capacity() const
+	{
+		return m_pTail - m_pHead;
+	}
+
+	__NODISCARD constexpr uint64_t MaxSize() const
+	{
+		return std::numeric_limits<uint64_t>::max();
+	}
+
+	__NODISCARD constexpr bool operator==(const Array& other) const
+	{
+		const uint64_t size{ Size() };
+
+		if (size != other.Size())
+			return false;
+
+		for (uint64_t i{}; i < size; ++i)
+			if (*(m_pHead + i) != *(other.m_pHead + i))
+				return false;
+
+		return true;
+	}
+
+	__NODISCARD constexpr bool operator!=(const Array& other) const
+	{
+		return !(*this == other);
+	}
+#pragma endregion
+
+#pragma region Manipulating Array
+	constexpr void Reserve(const uint64_t newCap)
+	{
+		if (newCap > Capacity())
+			if (newCap < MaxSize())
+				ReallocateExactly(newCap);
+	}
+
+	constexpr void Resize(const uint64_t newSize)
+	{
+		static_assert(std::is_default_constructible_v<T>, "Array::Resize() > T is not default constructable!");
+
+		Resize(newSize, T{});
+	}
+	template<typename U>
+	constexpr void Resize(const uint64_t newSize, U&& val)
+	{
+		static_assert(std::is_default_constructible_v<U>, "Array::Resize() > T is not default constructable!");
+		static_assert(std::is_same_v<T, U>, "Array::Resize() > U and T must be the same!");
+
+		const uint64_t oldSize{ Size() };
+
+		if (newSize > oldSize)
+		{
+			const uint64_t diff{ newSize - oldSize };
+
+			for (uint64_t i{}; i < diff; ++i)
+				EmplaceBack(__FORWARD(val));
+
+			return;
+		}
+
+		if (newSize < oldSize)
+		{
+			const uint64_t diff{ oldSize - newSize };
+
+			for (uint64_t i{}; i < diff; ++i)
+				Pop();
+
+			return;
+		}
+	}
+
+	constexpr void ShrinkToFit()
 	{
 		if (Size() == Capacity())
 			return;
 
-		Reallocate(Size());
+		ReallocateExactly(Size());
 	}
 
-	Type& Front()
+	constexpr Array Select(const UnaryPred& pred) const
 	{
-		ASSERT((Head != nullptr), "Container::Front() > Out of range!");
+		const uint64_t size{ Size() };
 
-		return *(Head);
+		Array arr{ Capacity_P{ size } };
+
+		for (uint64_t i{}; i < size; ++i)
+		{
+			const T* const elem{ m_pHead + i };
+
+			if (pred(*elem))
+				arr.Add(*elem);
+		}
+
+		return arr;
 	}
-	const Type& Front() const
+	constexpr Array Select(UnaryPred&& pred) const
 	{
-		ASSERT((Head != nullptr), "Container::Front() > Out of range!");
+		const uint64_t size{ Size() };
 
-		return *(Head);
+		Array arr{ Capacity_P{ size } };
+
+		for (uint64_t i{}; i < size; ++i)
+		{
+			const T* const elem{ m_pHead + i };
+
+			if (pred(*elem))
+				arr.Add(*elem);
+		}
+
+		return arr;
 	}
 
-	Type& Back()
+	constexpr void Sort() const
 	{
-		ASSERT((LastElement != nullptr), "Container::Back() > Out of range!");
-
-		return *LastElement;
+		Sort([](const T& a, const T& b)->bool
+			{
+				return a < b;
+			});
 	}
-	const Type& Back() const
+	constexpr void Sort(const BinaryPred& pred) const
 	{
-		ASSERT((LastElement != nullptr), "Container::Back() > Out of range!");
+		if (!m_pHead)
+			return;
 
-		return *LastElement;
+		const uint64_t size{ Size() };
+
+		if (size < 64u)
+			InsertionSort(pred);
+		else
+			MergeSort(0u, size - 1u, pred);
 	}
+#pragma endregion
 
-	bool IsEmpty() const
+#pragma region Accessing Elements
+	constexpr T& Front()
 	{
-		return LastElement == nullptr;
-	}
+		__ASSERT(Size() > 0 && "Array::Front() > Array is empty");
 
-	Type& At(size_t index)
+		return *m_pHead;
+	}
+	constexpr const T& Front() const
 	{
-		ASSERT(((Head + index) < Tail), "Container::At() > Index was out of range!");
+		__ASSERT(Size() > 0 && "Array::Front() > Array is empty");
 
-		return *(Head + index);
+		return *m_pHead;
 	}
-	const Type& At(size_t index) const
+
+	constexpr T& Back()
 	{
-		ASSERT(((Head + index) < Tail), "Container::At() > Index was out of range!");
+		__ASSERT(Size() > 0 && "Array::Back() > Array is empty");
 
-		return *(Head + index);
+		return *(m_pCurrentEnd - 1);
 	}
-
-	Type& operator[](size_t index)
+	constexpr const T& Back() const
 	{
-		return *(Head + index);
+		__ASSERT(Size() > 0 && "Array::Back() > Array is empty");
+
+		return *(m_pCurrentEnd - 1);
 	}
-	const Type& operator[](size_t index) const
+
+	constexpr T& At(const uint64_t index)
 	{
-		return *(Head + index);
-	}
+		__ASSERT((index < Size()) && "Array::At() > Index is out of range");
 
-	Type* const Data()
+		return *(m_pHead + index);
+	}
+	constexpr const T& At(const uint64_t index) const
 	{
-		return Head;
+		__ASSERT((index < Size()) && "Array::At() > Index is out of range");
+
+		return *(m_pHead + index);
 	}
-	const Type* const Data() const
+
+	constexpr T& operator[](const uint64_t index)
 	{
-		return Head;
+		return *(m_pHead + index);
+	}
+	constexpr const T& operator[](const uint64_t index) const
+	{
+		return *(m_pHead + index);
 	}
 
-	RandomIterator<Type> begin() noexcept { return RandomIterator(Head); }
-	RandomConstIterator<Type> begin() const noexcept { return RandomConstIterator(Head); }
+	constexpr T* const Data()
+	{
+		return m_pHead;
+	}
+	constexpr const T* const Data() const
+	{
+		return m_pHead;
+	}
 
-	RandomIterator<Type> end() noexcept { return RandomIterator(LastElement + 1); }
-	RandomConstIterator<Type> end() const noexcept { return RandomConstIterator(LastElement + 1); }
+	constexpr It Find(const T& val) const
+	{
+		const uint64_t size{ Size() };
+		for (uint64_t i{}; i < size; ++i)
+			if (*(m_pHead + i) == val)
+				return It{ m_pHead + i };
 
-	RandomConstIterator<Type> cbegin() const noexcept { return RandomConstIterator(Head); }
-	RandomConstIterator<Type> cend() const noexcept { return RandomConstIterator(LastElement + 1); }
+		return It{ m_pCurrentEnd };
+	}
+	constexpr It Find(const UnaryPred& pred) const
+	{
+		const uint64_t size{ Size() };
+		for (uint64_t i{}; i < size; ++i)
+			if (pred(*(m_pHead + i)))
+				return It{ m_pHead + i };
+
+		return It{ m_pCurrentEnd };
+	}
+	constexpr It Find(UnaryPred&& pred) const
+	{
+		const uint64_t size{ Size() };
+		for (uint64_t i{}; i < size; ++i)
+			if (pred(*(m_pHead + i)))
+				return It{ m_pHead + i };
+
+		return It{ m_pCurrentEnd };
+	}
+
+	constexpr Array FindAll(const T& val) const
+	{
+		Array arr{};
+
+		const uint64_t size{ Size() };
+		for (uint64_t i{}; i < size; ++i)
+			if (*(m_pHead + i) == val)
+				arr.EmplaceBack(*(m_pHead + i));
+
+		return arr;
+	}
+	constexpr Array FindAll(const UnaryPred& pred) const
+	{
+		Array arr{};
+
+		const uint64_t size{ Size() };
+		for (uint64_t i{}; i < size; ++i)
+			if (pred(*(m_pHead + i)))
+				arr.EmplaceBack(*(m_pHead + i));
+
+		return arr;
+	}
+	constexpr Array FindAll(UnaryPred&& pred) const
+	{
+		Array arr{};
+
+		const uint64_t size{ Size() };
+		for (uint64_t i{}; i < size; ++i)
+			if (pred(*(m_pHead + i)))
+				arr.EmplaceBack(*(m_pHead + i));
+
+		return arr;
+	}
+#pragma endregion
+
+#pragma region Iterators
+	constexpr It begin() { return m_pHead; }
+	constexpr CIt begin() const { return m_pHead; }
+
+	constexpr It end() { return m_pCurrentEnd; }
+	constexpr CIt end() const { return m_pCurrentEnd; }
+
+	constexpr CIt cbegin() const { return m_pHead; }
+	constexpr CIt cend() const { return m_pCurrentEnd; }
+#pragma endregion
 
 private:
-	void ReleaseMemory(Type*& pOldHead)
+#pragma region Internal Helpers
+	constexpr void Reallocate()
 	{
-		if (pOldHead)
+		const uint64_t oldSize{ Size() };
+		const uint64_t newCap{ CalculateNewCapacity(oldSize + 1) };
+
+		T* pOldHead{ m_pHead };
+		T* pOldTail{ m_pTail };
+
+		m_pHead = new T[newCap]{};
+		m_pTail = m_pHead + newCap;
+
+		for (uint64_t i{}; i < oldSize; ++i)
 		{
-			delete[] pOldHead;
-			pOldHead = nullptr;
+			if constexpr (std::is_move_assignable_v<T>)
+				new (m_pHead + i) T{ __MOVE(*(pOldHead + i)) };
+			else
+				new (m_pHead + i) T{ *(pOldHead + i) };
+		}
+
+		m_pCurrentEnd = m_pHead + oldSize;
+
+		DeleteData(pOldHead, pOldTail);
+		Release(pOldHead);
+	}
+	constexpr void ReallocateExactly(const uint64_t newCap)
+	{
+		const uint64_t oldSize{ Size() };
+
+		T* pOldHead{ m_pHead };
+		T* pOldTail{ m_pTail };
+
+		m_pHead = new T[newCap]{};
+		m_pTail = m_pHead + newCap;
+
+		for (uint64_t i{}; i < oldSize; ++i)
+		{
+			if constexpr (std::is_move_assignable_v<T>)
+				new (m_pHead + i) T{ __MOVE(*(pOldHead + i)) };
+			else
+				new (m_pHead + i) T{ *(pOldHead + i) };
+		}
+
+		m_pCurrentEnd = m_pHead + oldSize;
+
+		DeleteData(pOldHead, pOldTail);
+		Release(pOldHead);
+	}
+
+	constexpr void Release(T*& pData)
+	{
+		if (pData)
+		{
+			delete[] pData;
+			pData = nullptr;
 		}
 	}
 
-	void DeleteData(Type* pHead, Type* const pTail)
+	constexpr void DeleteData(T* head, T* const tail) const
 	{
-		if constexpr (!std::is_trivially_destructible_v<Type>) // if this is a struct / class with a custom destructor, call it
+		if constexpr (!std::is_trivially_destructible_v<T>)
 		{
-			while (pHead <= pTail)
+			while (head < tail)
 			{
-				pHead->~Type();
-				++pHead;
+				head->~T();
+				++head;
 			}
 		}
 	}
 
-	void Reallocate(size_t newCapacity)
+	__NODISCARD constexpr uint64_t CalculateNewCapacity(const uint64_t min) const
 	{
-		const size_t size{ Size() };
+		const uint64_t oldCap{ Capacity() };
+		const uint64_t maxCap{ MaxSize() };
 
-		Type* pOldHead{ Head };
-		Type* const pOldTail{ Tail };
+		if (oldCap > maxCap - oldCap / 2u)
+			return maxCap;
 
-		Head = static_cast<Type*>(malloc(SizeOfType * newCapacity));
-		Tail = Head + newCapacity;
+		const uint64_t newCap{ oldCap + oldCap / 2u };
 
-		for (size_t index{}; index < size; ++index)
-		{
-			LastElement = Head + index; // adjust pointer
-			*LastElement = std::move(*(pOldHead + index)); // move element from old memory over
-		}
+		// If our growth is insufficient, return just the bare minimum
+		if (newCap < min)
+			return min;
 
-		DeleteData(pOldHead, pOldTail);
-		ReleaseMemory(pOldHead);
+		return newCap;
 	}
 
-	template<typename ... Values>
-	void ReallocateAndEmplace(Values && ...values)
+	constexpr void MoveRangeBackward(T* head, T* end, T* newHead) const
 	{
-		Reallocate(Size() + Size() / 2 + 1);
-
-		if (!LastElement)
+		const uint64_t size{ static_cast<uint64_t>(end - head) };
+		for (uint64_t i{}; i < size; ++i)
 		{
-			LastElement = Head;
-		}
-		else
-		{
-			++LastElement;
-		}
-
-		new (LastElement) Type(std::forward<Values>(values)...);
-	}
-
-	void ResizeToBigger(size_t newSize)
-	{
-		static_assert(std::is_default_constructible_v<Type>, "Container::Resize() > Type is not default constructable!");
-
-		const size_t sizeDifference{ newSize - Size() };
-
-		for (size_t i{}; i < sizeDifference; ++i)
-		{
-			Emplace(Type{});
-		}
-	}
-	void ResizeToSmaller(size_t newSize)
-	{
-		const size_t sizeDifference{ Size() - newSize };
-
-		for (size_t i{}; i < sizeDifference; ++i)
-		{
-			Pop();
+			if constexpr (std::is_move_assignable_v<T>)
+				new (newHead + i) T{ __MOVE(*(head + i)) };
+			else
+				new (newHead + i) T{ *(head + i) };
 		}
 	}
 
-	Type* Head{ nullptr };
-	Type* Tail{ nullptr };
-	Type* LastElement{ nullptr };
+	constexpr void MoveRangeForward(T* head, T* end, T* newHead) const
+	{
+		const int64_t size{ static_cast<int64_t>(end - head) };
+		for (int64_t i{ size - 1 }; i >= 0; --i)
+		{
+			if constexpr (std::is_move_assignable_v<T>)
+				new (newHead + i) T{ __MOVE(*(head + i)) };
+			else
+				new (newHead + i) T{ *(head + i) };
+		}
+	}
+#pragma endregion
+
+#pragma region Sorters
+	constexpr void InsertionSort(const BinaryPred& pred) const
+	{
+		/* Don't use At() to make sure elements get copied instead of referenced around! */
+
+		const uint64_t size{ Size() };
+		for (int i{ 1 }; i < size; ++i)
+		{
+			T key = *(m_pHead + i);
+			int j{ i - 1 };
+
+			while (j >= 0 && pred(key, *(m_pHead + j)))
+			{
+				*(m_pHead + j + 1) = *(m_pHead + j);
+				--j;
+			}
+
+			*(m_pHead + j + 1) = key;
+		}
+	}
+	constexpr void MergeSort(const uint64_t begin, const uint64_t end, const BinaryPred& pred) const
+	{
+		/* Check recursion stop */
+		if (begin >= end)
+			return;
+
+		const uint64_t mid{ begin + (end - begin) / 2u };
+
+		MergeSort(begin, mid, pred);
+		MergeSort(mid + 1u, end, pred);
+		Merge(begin, mid, end, pred);
+	}
+	constexpr void Merge(uint64_t left, uint64_t mid, const uint64_t right, const BinaryPred& pred) const
+	{
+		uint64_t halfStart{ mid + 1u };
+
+		if (pred(*(m_pHead + mid), *(m_pHead + halfStart)))
+			return;
+
+		while (left <= mid && halfStart <= right)
+		{
+			if (pred(*(m_pHead + left), *(m_pHead + halfStart)))
+				++left;
+			else
+			{
+				T val{ *(m_pHead + halfStart) };
+				uint64_t i{ halfStart };
+
+				while (i != left)
+				{
+					*(m_pHead + i) = *(m_pHead + i - 1);
+					--i;
+				}
+
+				*(m_pHead + left) = val;
+
+				++left;
+				++mid;
+				++halfStart;
+			}
+		}
+	}
+#pragma endregion
+
+	T* m_pHead;
+	T* m_pTail;
+	T* m_pCurrentEnd /* points PAST the last element */;
 };
